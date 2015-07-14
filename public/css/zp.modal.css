@@ -1,0 +1,258 @@
+.modal {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background: white;
+  color: crimson;
+  display: none;
+  z-index: 100;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+.modal .modal-back {
+  position: absolute;
+  font-weight: bold;
+  font-size: 28px;
+  line-height: 36px;
+  cursor: pointer;
+  left: 10px;
+  top: 5px;
+}
+.modal .modal-close {
+  position: absolute;
+  font-size: 30px;
+  line-height: 36px;
+  cursor: pointer;
+  right: 10px;
+}
+.modal .modal-logo {
+  font-style: italic;
+  font-size: 3em;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#modal-login {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+#modal-login .login-input input {
+  width: 100%;
+  height: 25px;
+  line-height: 25px;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+#modal-login .login-btn button {
+  width: 100%;
+  height: 25px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic";
+  margin-bottom: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+#modal-login .join-btn, #modal-login .findpw-btn, #modal-login .offline-btn {
+  border: 1px solid gray;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 3px;
+}
+
+#modal-menu .menu {
+  float: left;
+  width: 50%;
+  border: 1px solid silver;
+  color: crimson;
+}
+
+#modal-todo {
+  height: 100%;
+}
+#modal-todo form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+#modal-todo .todo-input input {
+  width: 100%;
+  height: 25px;
+  line-height: 25px;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+#modal-todo .todo-btn button {
+  width: 100%;
+  height: 25px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic";
+  margin-bottom: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+#modal-search {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#modal-plan {
+  height: 100%;
+}
+#modal-plan form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+#modal-plan .plan-input input {
+  width: 100%;
+  height: 25px;
+  line-height: 25px;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+#modal-plan .plan-btn button {
+  width: 100%;
+  height: 25px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic";
+  margin-bottom: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+#modal-dday {
+  height: 100%;
+}
+#modal-dday form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+#modal-dday .dday-input input {
+  width: 100%;
+  height: 25px;
+  line-height: 25px;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+#modal-dday .dday-btn button {
+  width: 100%;
+  height: 25px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic";
+  margin-bottom: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+#modal-join {
+  height: 100%;
+}
+#modal-join header {
+  text-align: center;
+}
+#modal-join form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+#modal-join form #join-agree {
+  height: auto;
+}
+#modal-join form #check-email-btn {
+  height: 25px;
+  background: transparent;
+  font-family: "Nanum Gothic";
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid gray;
+}
+#modal-join form input {
+  height: 25px;
+}
+#modal-join form #join-sbmt {
+  width: 100%;
+  height: 25px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic";
+  margin-bottom: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+#modal-findpw {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#modal-type {
+  height: 100%;
+}
+#modal-type .wrapper {
+  top: 50%;
+  transform: translateY(-50%);
+  position: relative;
+}
+#modal-type #type-todo, #modal-type #type-plan, #modal-type #type-dday {
+  text-align: center;
+  font-size: 30px;
+  line-height: 50px;
+  border: 1px solid black;
+  height: 50px;
+}
+
+#modal-search {
+  height: 100%;
+  width: 100%;
+}
+#modal-search form {
+  width: 80%;
+  margin: 0 auto;
+  top: 50%;
+  transform: translateY(-50%);
+  position: relative;
+}
+
+#search-date {
+  width: 100%;
+  height: 30px;
+  margin-bottom: 10px;
+}
+
+#search-btn, #search-today {
+  width: 49%;
+  border: 1px solid silver;
+  height: 40px;
+  color: crimson;
+  background: white;
+}

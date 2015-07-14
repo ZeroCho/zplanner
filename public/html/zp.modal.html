@@ -1,0 +1,189 @@
+<head>
+    <meta charset="utf-8">
+</head>
+<body>
+    <!-- login -->
+    <div id="modal-login">
+        <div class="modal-logo">Zecretary</div>
+        <form id="login-form">
+            <div class="login-input">
+                <label for="login-email">이메일</label>
+                <input type="email" id="login-email" name="login-email" required autofocus/>
+                <label for="login-pw">비밀번호</label>
+                <input type="password" id="login-pw" name="login-pw" required/>
+            </div>
+            <div class="login-btn">
+                <button type="submit" id="login-sbmt">로그인</button>
+            </div>
+        </form>
+        <div class="join-btn">회원가입</div>
+        <div class="findpw-btn">아이디/비밀번호 찾기</div>
+        <div class="offline-btn">오프라인으로 접속하기</div>
+    </div>
+    <!-- join -->
+    <div id="modal-join">
+        <span class="modal-close"><i class="fa fa-times"></i></span>
+        <span class="modal-back"><i class="fa fa-chevron-left"></i></span>
+        <header class="join-header">
+            <h1>회원가입</h1>
+        </header>
+        <form id="join-form">
+            <label for="join-email">이메일</label>
+            <br/>
+            <input type="email" id="join-email" required autofocus/>
+            <button type="button" id="check-email-btn">중복확인</button>
+            <br/>
+            <label for="join-name">닉네임</label>
+            <br/>
+            <input type="text" id="join-name" required/>
+            <br/>
+            <label for="join-pw">비밀번호</label>
+            <br/>
+            <input type="password" id="join-pw" required/>
+            <br/>
+            <label for="join-pwc">비밀번호 확인</label>
+            <br/>
+            <input type="password" id="join-pwc" required/>
+            <br/>
+            <label for="join-qst">비밀번호 찾기 질문</label>
+            <br/>
+            <input type="text" id="join-qst" required/>
+            <br/>
+            <label for="join-ans">비밀번호 찾기 대답</label>
+            <br/>
+            <input type="text" id="join-ans" required/>
+            <br/>
+            <input type="checkbox" value="agree" id="join-agree" required disabled>
+            <label for="join-agree">회원가입 약관에 동의합니다.</label>
+            <br/>
+            <button type="submit" id="join-sbmt">가입</button>
+        </form>
+    </div>
+    <!-- findpw -->
+    <div id="modal-findpw">
+        <span class="modal-close"><i class="fa fa-times"></i></span>
+        <span class="modal-back"><i class="fa fa-chevron-left"></i></span>
+        <header class="findpw-header">
+            <h1>아이디 / 비밀번호 찾기</h1>
+        </header>
+        <form id="findpw-email-form">
+            <input type="email" id="findpw-email" placeholder="이메일" required autofocus>
+            <br>
+            <button type="submit" id="findpw-email-sbmt">확인</button>
+        </form>
+        <form id="findpw-qst-form" style="display:none">
+            <div id="findpw-qst"></div>
+            <input type="text" id="findpw-ans" placeholder="답변" required/>
+            <br>
+            <button type="submit" id="findpw-ans-sbmt">비밀번호 찾기</button>
+            <div id="findpw-result"></div>
+        </form>
+    </div>
+    <!-- menu -->
+    <div id="modal-menu">
+        <div class="menu">플래너</div>
+        <div class="menu">약속잡기</div>
+        <div class="menu">구독</div>
+    </div>
+    <!-- search -->
+    <div id="modal-search">
+        <span class="modal-close"><i class="fa fa-times"></i></span>
+        <form>
+            <label for="search-date">날짜</label>
+            <input type="date" name="search-date" id="search-date"/>
+            <button id="search-btn">이동</button>
+            <button id="search-today">오늘로</button>
+        </form>
+    </div>
+    <!-- type -->
+    <div id="modal-type">
+        <span class="modal-close"><i class="fa fa-times"></i></span>
+        <div class="wrapper">
+            <section id="type-todo">할일</section>
+            <section id="type-plan">일정</section>
+            <section id="type-dday">디데이</section>
+        </div>
+    </div>
+    <!-- todo -->
+    <div id="modal-todo">
+        <span class="modal-close"><i class="fa fa-times"></i></span>
+        <form name="todo-form">
+            <div class="todo-input">
+                <label for="todo-input-date">날짜</label>
+                <input type="date" id="todo-input-date" name="todo-input-date" required autofocus/>
+                <label for="todo-input-time">시간</label>
+                <input type="time" id="todo-input-time" name="todo-input-time" required/>
+                <label for="todo-input-text">내용</label>
+                <input type="text" id="todo-input-text" name="todo-input-text" required/>
+                <label for="todo-input-nodue">무기한</label>
+                <input type="checkbox" id="todo-input-nodue" value="5" />
+            </div>
+            <div class="todo-btn">
+                <button type="submit" name="todo-btn">등록</button>
+            </div>
+        </form>
+    </div>
+    <!-- plan -->
+    <div id="modal-plan">
+        <span class="modal-close"><i class="fa fa-times"></i></span>
+        <form>
+            <div class="plan-input">
+                <label for="plan-input-startdate">시작날짜</label>
+                <input type="date" id="plan-input-startdate" style="width:100%" required>
+                <label for="plan-input-starttime">시작시간</label>
+                <input type="time" id="plan-input-starttime" style="width:100%" ><br/>
+                <label for="plan-input-enddate">종료날짜</label>
+                <input type="date" id="plan-input-enddate" style="width:100%" required>
+                <label for="plan-input-endtime">종료시간</label>
+                <input type="time" id="plan-input-endtime" style="width:100%" ><br/>
+                <label for="plan-input-repeat">반복</label>
+                <input type="checkbox" id="plan-input-repeat" value="repeat"/>
+                <div class="plan-repeat" hidden>
+                    <input type="radio" id="repeat-type-everyday" name="repeat-type" value="everyday" />
+                    <label for="repeat-type-everyday">매일</label>
+                    <input type="radio" id="repeat-type-everyweek" name="repeat-type" value="everyweek" />
+                    <label for="repeat-type-everyweek">매주</label>
+                    <div class="plan-repeat-everyweek" hidden>
+                    <input type="checkbox" id="repeat-day-mon" name="repeat-day" value="0" />
+                    <label for="repeat-day-mon">월</label>
+                    <input type="checkbox" id="repeat-day-tue" name="repeat-day" value="1" />
+                    <label for="repeat-day-tue">화</label>
+                    <input type="checkbox" id="repeat-day-wed" name="repeat-day" value="2" />
+                    <label for="repeat-day-wed">수</label>
+                    <input type="checkbox" id="repeat-day-thu" name="repeat-day" value="3" />
+                    <label for="repeat-day-thu">목</label>
+                    <input type="checkbox" id="repeat-day-fri" name="repeat-day" value="4" />
+                    <label for="repeat-day-fri">금</label>
+                    <input type="checkbox" id="repeat-day-sat" name="repeat-day" value="5" />
+                    <label for="repeat-day-sat">토</label>
+                    <input type="checkbox" id="repeat-day-sun" name="repeat-day" value="6" />
+                    <label for="repeat-day-sun">일</label>
+                    </div>
+                    <br/>
+                    횟수: <input type="number" class="plan-input-number" size="2" />회
+                    종료일 <input type="date" class="plan-input-lastdate" />
+                </div>
+                <br/>
+                <label style="width:100%" >내용</label>
+                <input class="plan-input-text" placeholder="내용" style="width:100%" required>
+            </div>
+            <div class="plan-btn">
+                <button type="button">등록</button>
+            </div>
+        </form>
+    </div>
+    <!-- dday -->
+    <div id="modal-dday">
+        <span class="modal-close"><i class="fa fa-times"></i></span>
+        <form>
+            <div class="dday-input">
+                <input type="date" class="dday-input-target" placeholder="당일" required>
+                <br/>
+                <input type="text" class="dday-input-text" placeholder="내용" required>
+            </div>
+            <div class="dday-btn">
+                <button type="button">등록</button>
+            </div>
+        </form>
+    </div>
+</body>

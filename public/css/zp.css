@@ -1,0 +1,46 @@
+@charset "UTF-8";
+/* zp.css
+ * 루트 네임스페이스 스타일
+ */
+/** 재설정 시작 */
+/* line 7, ../sass/zp.sass */
+* {
+  margin: 0;
+  padding: 0;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* line 12, ../sass/zp.sass */
+html {
+  height: 100%;
+}
+
+/* line 14, ../sass/zp.sass */
+body {
+  font-family: "Nanum Gothic";
+  height: 100%;
+  position: relative;
+  min-width: 320px;
+  min-height: 480px;
+}
+
+/* line 20, ../sass/zp.sass */
+ol, ul, dl {
+  list-style-position: inside;
+}
+
+/* line 22, ../sass/zp.sass */
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/** 재설정 끝 */
+/* line 26, ../sass/zp.sass */
+#zecretary {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}

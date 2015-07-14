@@ -1,0 +1,70 @@
+@import 'compass'
+@import "compass/css3/user-interface"
+$td-height: 30px
+
+.week-table
+  width: 100%
+  border-collapse: collapse
+    +user-select(none)
+  th
+    text-align: center
+    height: $td-height
+    border: 1px solid silver
+    &:first-child
+      color: red
+      border-left: none
+  th:last-child
+    color: blue
+  .week-date
+    text-align: center
+  td
+    max-width: 0
+    width: (100%/7)
+    text-overflow: ellipsis
+    overflow: hidden
+    white-space: nowrap
+    text-align: center
+    height: $td-height
+    color: silver
+    border: 1px solid silver
+  tbody tr:first-child td
+    border-bottom: 1px solid black
+    color: #000
+.week-plan, .week-todo, .week-due, .week-done
+  overflow: scroll
+  border: 1px solid silver
+  color: black
+  position: absolute
+  width: 100%/7
+  z-index: 1
+  height: $td-height
+  white-space: nowrap
+  font-size: 10px
+
+.week-plan
+  background: skyblue
+
+.week-todo
+  background: yellow
+
+.week-due
+  bacgkround: orange
+
+.week-done
+  background: yellowgreen
+
+.week-dday
+  width: 100%
+  background: red
+  border: 1px solid silver
+  color: black
+  overflow: scroll
+  height: $td-height
+
+.week-whole
+  background: skyblue
+  width: 100%
+  border: 1px solid silver
+  color: black
+  overflow: scroll
+  height: $td-height

@@ -1,0 +1,24 @@
+{
+  "name": "zecretary",
+  "version": "0.0.1",
+  "authors": [
+    "ZeroCho <zerohch0@gmail.com>"
+  ],
+  "description": "zero's secretary application",
+  "moduleType": [
+    "node"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.4",
+    "pouchdb": "~3.6.0",
+    "pouchdb-authentication": "~0.4.0"
+  }
+}

@@ -1,0 +1,57 @@
+@import 'compass'
+$td-height: 40px
+=input-css
+  height: $td-height - 1
+  text-overflow: ellipsis
+  white-space: nowrap
+  overflow: hidden
+
+.dday-table
+  width: 100%
+  +user-select(none)
+  td
+    border-top: 1px solid silver
+    height: $td-height
+    background: red
+    color: white
+    text-align: center
+
+.plan-table
+  width: 100%
+  +user-select(none)
+  td
+    border-top: 1px solid silver
+    height: $td-height
+    text-align: center
+    color: silver
+.todo
+  position: absolute
+  width: 100%
+  background: yellow
+  left: 0
+  height: $td-height - 1
+  text-align: center
+  .input
+    +input-css
+
+.plan
+  background: skyblue
+  text-align: center
+  .input
+    +input-css
+
+.dday
+  background: red
+  height: $td-height - 1
+  text-align: center
+
+.whole
+  background: skyblue
+  height: $td-height - 1
+  text-align: center
+
+.time-indicator
+  background: crimson
+  height: 1px
+  width: 100%
+  position: absolute

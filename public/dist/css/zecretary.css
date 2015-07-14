@@ -1,0 +1,1113 @@
+.calendar-table {
+  text-align: center;
+  border-collapse: collapse;
+}
+
+.calendar-table thead th {
+  border-bottom: 1px solid black;
+}
+
+.calendar-table td:nth-child(n+1) {
+  vertical-align: top;
+}
+
+.calendar-table td:first-child,
+.calendar-table th:first-child,
+.calendar-table .calendar-caption {
+  color: green;
+}
+
+.calendar-table td:nth-child(2),
+.calendar-table th:nth-child(2) {
+  color: red;
+}
+
+.calendar-table td:last-child,
+.calendar-table th:last-child {
+  color: blue;
+}
+
+.calendar-table .hidden {
+  visibility: hidden;
+  display: none;
+}
+
+.calendar-table .td-today {
+  color: darkred;
+  text-decoration: underline;
+  font-weight: bolder;
+}
+@charset "UTF-8";
+
+/* zp.css
+ * 루트 네임스페이스 스타일
+ */
+
+/** 재설정 시작 */
+
+/* line 7, ../sass/zp.sass */
+
+* {
+  margin: 0;
+  padding: 0;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* line 12, ../sass/zp.sass */
+
+html {
+  height: 100%;
+}
+
+/* line 14, ../sass/zp.sass */
+
+body {
+  font-family: "Nanum Gothic";
+  height: 100%;
+  position: relative;
+  min-width: 320px;
+  min-height: 480px;
+}
+
+/* line 20, ../sass/zp.sass */
+
+ol,
+ul,
+dl {
+  list-style-position: inside;
+}
+
+/* line 22, ../sass/zp.sass */
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/** 재설정 끝 */
+
+/* line 26, ../sass/zp.sass */
+
+#zecretary {
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+@media -sass-debug-info {
+  filename {
+    font-family: file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass;
+  }
+
+  line {
+    font-family: \000039;
+  }
+}
+
+.dday-table {
+  width: 100%;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@media -sass-debug-info {
+  filename {
+    font-family: file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass;
+  }
+
+  line {
+    font-family: \0000312;
+  }
+}
+
+.dday-table td {
+  border-top: 1px solid silver;
+  height: 40px;
+  background: red;
+  color: white;
+  text-align: center;
+}
+
+@media -sass-debug-info {
+  filename {
+    font-family: file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass;
+  }
+
+  line {
+    font-family: \0000319;
+  }
+}
+
+.plan-table {
+  width: 100%;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@media -sass-debug-info {
+  filename {
+    font-family: file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass;
+  }
+
+  line {
+    font-family: \0000322;
+  }
+}
+
+.plan-table td {
+  border-top: 1px solid silver;
+  height: 40px;
+  text-align: center;
+  color: silver;
+}
+
+@media -sass-debug-info {
+  filename {
+    font-family: file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass;
+  }
+
+  line {
+    font-family: \0000327;
+  }
+}
+
+.todo {
+  position: absolute;
+  width: 100%;
+  background: yellow;
+  left: 0;
+  height: 39px;
+  text-align: center;
+}
+
+@media -sass-debug-info {
+  filename {
+    font-family: file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass;
+  }
+
+  line {
+    font-family: \0000334;
+  }
+}
+
+.todo .input {
+  height: 39px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+@media -sass-debug-info {
+  filename {
+    font-family: file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass;
+  }
+
+  line {
+    font-family: \0000337;
+  }
+}
+
+.plan {
+  background: skyblue;
+  text-align: center;
+}
+
+@media -sass-debug-info {
+  filename {
+    font-family: file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass;
+  }
+
+  line {
+    font-family: \0000340;
+  }
+}
+
+.plan .input {
+  height: 39px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+@media -sass-debug-info {
+  filename {
+    font-family: file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass;
+  }
+
+  line {
+    font-family: \0000343;
+  }
+}
+
+.dday {
+  background: red;
+  height: 39px;
+  text-align: center;
+}
+
+@media -sass-debug-info {
+  filename {
+    font-family: file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass;
+  }
+
+  line {
+    font-family: \0000348;
+  }
+}
+
+.whole {
+  background: skyblue;
+  height: 39px;
+  text-align: center;
+}
+
+@media -sass-debug-info {
+  filename {
+    font-family: file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass;
+  }
+
+  line {
+    font-family: \0000353;
+  }
+}
+
+.time-indicator {
+  background: crimson;
+  height: 1px;
+  width: 100%;
+  position: absolute;
+}
+
+/*# sourceMappingURL=zp.day.css.map */
+/* line 2, ../sass/zp.dday.sass */
+
+.dday-item {
+  position: relative;
+  left: 10px;
+  margin-bottom: 10px;
+}
+
+/* line 6, ../sass/zp.dday.sass */
+
+.dday-item .dday-left {
+  display: inline-block;
+  height: 40px;
+  width: 50px;
+}
+
+/* line 10, ../sass/zp.dday.sass */
+
+.dday-item .dday-target {
+  position: absolute;
+  left: 50px;
+  top: 20px;
+  display: inline-block;
+  height: 20px;
+  font-size: 20px;
+}
+
+/* line 17, ../sass/zp.dday.sass */
+
+.dday-item .dday-text {
+  position: absolute;
+  left: 50px;
+  display: inline-block;
+  height: 20px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* line 24, ../sass/zp.dday.sass */
+
+.dday-item .dday-del {
+  position: absolute;
+  right: 20px;
+  display: inline-block;
+  height: 40px;
+}
+.modal {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background: white;
+  color: crimson;
+  display: none;
+  z-index: 100;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.modal .modal-back {
+  position: absolute;
+  font-weight: bold;
+  font-size: 28px;
+  line-height: 36px;
+  cursor: pointer;
+  left: 10px;
+  top: 5px;
+}
+
+.modal .modal-close {
+  position: absolute;
+  font-size: 30px;
+  line-height: 36px;
+  cursor: pointer;
+  right: 10px;
+}
+
+.modal .modal-logo {
+  font-style: italic;
+  font-size: 3em;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#modal-login {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#modal-login .login-input input {
+  width: 100%;
+  height: 25px;
+  line-height: 25px;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+#modal-login .login-btn button {
+  width: 100%;
+  height: 25px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic";
+  margin-bottom: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+#modal-login .join-btn,
+#modal-login .findpw-btn,
+#modal-login .offline-btn {
+  border: 1px solid gray;
+  text-align: center;
+  cursor: pointer;
+  margin-bottom: 3px;
+}
+
+#modal-menu .menu {
+  float: left;
+  width: 50%;
+  border: 1px solid silver;
+  color: crimson;
+}
+
+#modal-todo {
+  height: 100%;
+}
+
+#modal-todo form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#modal-todo .todo-input input {
+  width: 100%;
+  height: 25px;
+  line-height: 25px;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+#modal-todo .todo-btn button {
+  width: 100%;
+  height: 25px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic";
+  margin-bottom: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+#modal-search {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#modal-plan {
+  height: 100%;
+}
+
+#modal-plan form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#modal-plan .plan-input input {
+  width: 100%;
+  height: 25px;
+  line-height: 25px;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+#modal-plan .plan-btn button {
+  width: 100%;
+  height: 25px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic";
+  margin-bottom: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+#modal-dday {
+  height: 100%;
+}
+
+#modal-dday form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#modal-dday .dday-input input {
+  width: 100%;
+  height: 25px;
+  line-height: 25px;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+#modal-dday .dday-btn button {
+  width: 100%;
+  height: 25px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic";
+  margin-bottom: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+#modal-join {
+  height: 100%;
+}
+
+#modal-join header {
+  text-align: center;
+}
+
+#modal-join form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#modal-join form #join-agree {
+  height: auto;
+}
+
+#modal-join form #check-email-btn {
+  height: 25px;
+  background: transparent;
+  font-family: "Nanum Gothic";
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid gray;
+}
+
+#modal-join form input {
+  height: 25px;
+}
+
+#modal-join form #join-sbmt {
+  width: 100%;
+  height: 25px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic";
+  margin-bottom: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
+#modal-findpw {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#modal-type {
+  height: 100%;
+}
+
+#modal-type .wrapper {
+  top: 50%;
+  transform: translateY(-50%);
+  position: relative;
+}
+
+#modal-type #type-todo,
+#modal-type #type-plan,
+#modal-type #type-dday {
+  text-align: center;
+  font-size: 30px;
+  line-height: 50px;
+  border: 1px solid black;
+  height: 50px;
+}
+
+#modal-search {
+  height: 100%;
+  width: 100%;
+}
+
+#modal-search form {
+  width: 80%;
+  margin: 0 auto;
+  top: 50%;
+  transform: translateY(-50%);
+  position: relative;
+}
+
+#search-date {
+  width: 100%;
+  height: 30px;
+  margin-bottom: 10px;
+}
+
+#search-btn,
+#search-today {
+  width: 49%;
+  border: 1px solid silver;
+  height: 40px;
+  color: crimson;
+  background: white;
+}
+/* line 5, ../sass/zp.month.sass */
+
+.month-calendar {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* line 10, ../sass/zp.month.sass */
+
+.month-calendar table {
+  width: 100%;
+  height: 100%;
+}
+
+/* line 13, ../sass/zp.month.sass */
+
+.month-calendar table caption {
+  display: none;
+}
+
+/* line 15, ../sass/zp.month.sass */
+
+.month-calendar table tbody th,
+.month-calendar table td {
+  cursor: pointer;
+  border-left: 1px solid gray;
+  border-right: 1px solid gray;
+  border-collapse: collapse;
+  max-width: 0;
+  width: 12.5%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* line 25, ../sass/zp.month.sass */
+
+.month-calendar table tr {
+  border-bottom: 1px solid gray;
+}
+
+/* line 27, ../sass/zp.month.sass */
+
+.month-calendar table td:hover {
+  font-weight: bold;
+}
+
+/* line 30, ../sass/zp.month.sass */
+
+.month-dday {
+  overflow: scroll;
+  background-color: red;
+  border: 1px solid silver;
+  font-size: 10px;
+}
+
+/* line 36, ../sass/zp.month.sass */
+
+.month-todo {
+  overflow: scroll;
+  background-color: yellow;
+  border: 1px solid silver;
+  font-size: 10px;
+}
+
+/* line 42, ../sass/zp.month.sass */
+
+.month-done {
+  background-color: yellowgreen;
+}
+
+/* line 45, ../sass/zp.month.sass */
+
+.month-due {
+  background-color: orange;
+}
+
+/* line 48, ../sass/zp.month.sass */
+
+.month-plan {
+  overflow: scroll;
+  background-color: skyblue;
+  border: 1px solid silver;
+  font-size: 10px;
+}
+/* line 4, ../sass/zp.plan.sass */
+
+.plan-item {
+  position: relative;
+  height: 60px;
+  left: 10px;
+  margin-bottom: 10px;
+}
+
+/* line 9, ../sass/zp.plan.sass */
+
+.plan-item .plan-text {
+  position: absolute;
+  left: 20px;
+  right: 30px;
+  display: inline-block;
+  height: 20px;
+  top: 40px;
+  font-size: 20px;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* line 21, ../sass/zp.plan.sass */
+
+.plan-item .plan-start {
+  position: absolute;
+  left: 20px;
+  top: 0;
+  display: inline-block;
+  height: 20px;
+  font-size: 20px;
+}
+
+/* line 28, ../sass/zp.plan.sass */
+
+.plan-item .plan-end {
+  position: absolute;
+  left: 20px;
+  display: inline-block;
+  font-size: 20px;
+  height: 20px;
+  top: 20px;
+}
+
+/* line 35, ../sass/zp.plan.sass */
+
+.plan-item .plan-option {
+  position: absolute;
+  right: 20px;
+  display: inline-block;
+  height: 60px;
+}
+.main-header {
+  background: crimson;
+  color: white;
+  text-align: center;
+  height: 40px;
+  position: absolute;
+  top: 0;
+  z-index: 10;
+  width: 100%;
+  border-bottom: 1px solid black;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.main-header .info {
+  line-height: 40px;
+}
+
+.main-header .user {
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+}
+
+.main-header .user .avatar {
+  color: crimson;
+  display: inline-block;
+  background: white;
+  border: 1px solid silver;
+  text-align: center;
+  margin: 5px 4px;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  float: left;
+}
+
+.main-header .user .name {
+  float: left;
+  line-height: 40px;
+}
+
+.main-header .user .menu {
+  display: none;
+  width: 100px;
+  position: absolute;
+  z-index: 1;
+  top: 40px;
+  background: white;
+  color: black;
+}
+
+.main-header .user .menu li {
+  border: 1px solid black;
+  list-style-type: none;
+}
+
+.main-header .tool {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.main-header .tool .tool-button {
+  background: white;
+  color: crimson;
+  float: left;
+  border: 1px solid silver;
+  margin: 5px 4px;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+}
+
+.main-header .tool .tool-button:hover {
+  background: lightgray;
+}
+
+.main-header .tool .tool-button:active {
+  background: gray;
+}
+
+main {
+  position: relative;
+  top: 40px;
+  z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+main .flick-con {
+  position: relative;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  clear: both;
+}
+
+main .flick-panel {
+  border-right: 1px solid black;
+  border-bottom: 1px solid black;
+  float: left;
+  width: 100%;
+  position: absolute;
+  top: 0;
+}
+
+main .flick-panel:first-child {
+  left: 0;
+}
+
+main .flick-panel:nth-child(2) {
+  left: 100%;
+}
+
+main .flick-panel:last-child {
+  left: -100%;
+}
+.todo-item {
+  position: relative;
+  left: 10px;
+  margin-bottom: 10px;
+}
+
+.todo-item .todo-done {
+  display: inline-block;
+  height: 40px;
+  width: 20px;
+}
+
+.todo-item .todo-text {
+  position: absolute;
+  left: 20px;
+  right: 30px;
+  display: inline-block;
+  height: 20px;
+  font-size: 20px;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.todo-item .todo-due {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  display: inline-block;
+  height: 20px;
+  font-size: 20px;
+}
+
+.todo-item .todo-option {
+  position: absolute;
+  right: 20px;
+  display: inline-block;
+  height: 40px;
+}
+
+.item-due {
+  color: crimson;
+}
+
+.item-done {
+  color: lightgray;
+  text-decoration: line-through;
+}
+/* line 5, ../sass/zp.week.sass */
+
+.week-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-collapse--moz-user-select: -moz-none;
+  border-collapse--ms-user-select: none;
+  border-collapse--webkit-user-select: none;
+  border-collapse-user-select: none;
+}
+
+/* line 9, ../sass/zp.week.sass */
+
+.week-table th {
+  text-align: center;
+  height: 30px;
+  border: 1px solid silver;
+}
+
+/* line 13, ../sass/zp.week.sass */
+
+.week-table th:first-child {
+  color: red;
+  border-left: none;
+}
+
+/* line 16, ../sass/zp.week.sass */
+
+.week-table th:last-child {
+  color: blue;
+}
+
+/* line 18, ../sass/zp.week.sass */
+
+.week-table .week-date {
+  text-align: center;
+}
+
+/* line 20, ../sass/zp.week.sass */
+
+.week-table td {
+  max-width: 0;
+  width: 14.28571%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: center;
+  height: 30px;
+  color: silver;
+  border: 1px solid silver;
+}
+
+/* line 30, ../sass/zp.week.sass */
+
+.week-table tbody tr:first-child td {
+  border-bottom: 1px solid black;
+  color: #000;
+}
+
+/* line 33, ../sass/zp.week.sass */
+
+.week-plan,
+.week-todo,
+.week-due,
+.week-done {
+  overflow: scroll;
+  border: 1px solid silver;
+  color: black;
+  position: absolute;
+  width: 100%/7;
+  z-index: 1;
+  height: 30px;
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+/* line 44, ../sass/zp.week.sass */
+
+.week-plan {
+  background: skyblue;
+}
+
+/* line 47, ../sass/zp.week.sass */
+
+.week-todo {
+  background: yellow;
+}
+
+/* line 50, ../sass/zp.week.sass */
+
+.week-due {
+  bacgkround: orange;
+}
+
+/* line 53, ../sass/zp.week.sass */
+
+.week-done {
+  background: yellowgreen;
+}
+
+/* line 56, ../sass/zp.week.sass */
+
+.week-dday {
+  width: 100%;
+  background: red;
+  border: 1px solid silver;
+  color: black;
+  overflow: scroll;
+  height: 30px;
+}
+
+/* line 64, ../sass/zp.week.sass */
+
+.week-whole {
+  background: skyblue;
+  width: 100%;
+  border: 1px solid silver;
+  color: black;
+  overflow: scroll;
+  height: 30px;
+}
+/* line 5, ../sass/zp.year.sass */
+
+.year-main {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* line 11, ../sass/zp.year.sass */
+
+.year-calendar {
+  font-size: 10px;
+  float: left;
+  width: 33.33333%;
+  height: 25%;
+}
+
+/* line 16, ../sass/zp.year.sass */
+
+.year-calendar:nth-child(3n+1),
+.year-calendar:nth-child(3n+2) {
+  border-right: 1px solid silver;
+}
+
+/* line 18, ../sass/zp.year.sass */
+
+.year-calendar table {
+  width: 100%;
+  cursor: pointer;
+}
+
+/* line 21, ../sass/zp.year.sass */
+
+.year-calendar table:hover,
+.year-calendar table caption:hover {
+  background: #ebebb8;
+}
+
+/* line 23, ../sass/zp.year.sass */
+
+.year-calendar table th:first-child {
+  display: none;
+}
+
+/* line 25, ../sass/zp.year.sass */
+
+.year-calendar table td {
+  margin: 0;
+  padding: 0;
+}

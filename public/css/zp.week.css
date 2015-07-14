@@ -1,0 +1,98 @@
+/* line 5, ../sass/zp.week.sass */
+.week-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-collapse--moz-user-select: -moz-none;
+  border-collapse--ms-user-select: none;
+  border-collapse--webkit-user-select: none;
+  border-collapse-user-select: none;
+}
+/* line 9, ../sass/zp.week.sass */
+.week-table th {
+  text-align: center;
+  height: 30px;
+  border: 1px solid silver;
+}
+/* line 13, ../sass/zp.week.sass */
+.week-table th:first-child {
+  color: red;
+  border-left: none;
+}
+/* line 16, ../sass/zp.week.sass */
+.week-table th:last-child {
+  color: blue;
+}
+/* line 18, ../sass/zp.week.sass */
+.week-table .week-date {
+  text-align: center;
+}
+/* line 20, ../sass/zp.week.sass */
+.week-table td {
+  max-width: 0;
+  width: 14.28571%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: center;
+  height: 30px;
+  color: silver;
+  border: 1px solid silver;
+}
+/* line 30, ../sass/zp.week.sass */
+.week-table tbody tr:first-child td {
+  border-bottom: 1px solid black;
+  color: #000;
+}
+
+/* line 33, ../sass/zp.week.sass */
+.week-plan, .week-todo, .week-due, .week-done {
+  overflow: scroll;
+  border: 1px solid silver;
+  color: black;
+  position: absolute;
+  width: 100%/7;
+  z-index: 1;
+  height: 30px;
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+/* line 44, ../sass/zp.week.sass */
+.week-plan {
+  background: skyblue;
+}
+
+/* line 47, ../sass/zp.week.sass */
+.week-todo {
+  background: yellow;
+}
+
+/* line 50, ../sass/zp.week.sass */
+.week-due {
+  bacgkround: orange;
+}
+
+/* line 53, ../sass/zp.week.sass */
+.week-done {
+  background: yellowgreen;
+}
+
+/* line 56, ../sass/zp.week.sass */
+.week-dday {
+  width: 100%;
+  background: red;
+  border: 1px solid silver;
+  color: black;
+  overflow: scroll;
+  height: 30px;
+}
+
+/* line 64, ../sass/zp.week.sass */
+.week-whole {
+  background: skyblue;
+  width: 100%;
+  border: 1px solid silver;
+  color: black;
+  overflow: scroll;
+  height: 30px;
+}

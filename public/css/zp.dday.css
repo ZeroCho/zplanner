@@ -1,0 +1,37 @@
+/* line 2, ../sass/zp.dday.sass */
+.dday-item {
+  position: relative;
+  left: 10px;
+  margin-bottom: 10px;
+}
+/* line 6, ../sass/zp.dday.sass */
+.dday-item .dday-left {
+  display: inline-block;
+  height: 40px;
+  width: 50px;
+}
+/* line 10, ../sass/zp.dday.sass */
+.dday-item .dday-target {
+  position: absolute;
+  left: 50px;
+  top: 20px;
+  display: inline-block;
+  height: 20px;
+  font-size: 20px;
+}
+/* line 17, ../sass/zp.dday.sass */
+.dday-item .dday-text {
+  position: absolute;
+  left: 50px;
+  display: inline-block;
+  height: 20px;
+  font-size: 20px;
+  font-weight: bold;
+}
+/* line 24, ../sass/zp.dday.sass */
+.dday-item .dday-del {
+  position: absolute;
+  right: 20px;
+  display: inline-block;
+  height: 40px;
+}
