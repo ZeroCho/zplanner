@@ -20,34 +20,32 @@ zp.todo = (function () {
             $main: $container.find('.todo-main')
         };
     };
-
     showTodo = function () {
         var
-            $due, $text, $check, $div, $del, $alarm, $option, checked, todo_obj,
-            date_str, date, time, i, result,
+            $due, $text, $check, $div, $del, $alarm, $option, checked, todoMap,
+            dateStr, date, time, i, result,
             $frag = $(document.createDocumentFragment());
         result = zp.model.getTodo();
-        result.done(function (e, todo_list) {
-            e.preventDefault();
-            console.log(todo_list);
-            if (todo_list.length) {
+        result.done(function (todoList) {
+            console.log(todoList);
+            if (todoList.length) {
                 jqueryMap.$main.html('');
-                for (i = 0; i < todo_list.length; i++) {
-                    todo_obj = todo_list[i];
-                    console.log(todo_obj);
-                    if (todo_obj) {
-                        date = todo_obj.date;
-                        time = todo_obj.time;
-                        checked = todo_obj.done;
-                        date_str = date + ' ' + time;
-                        $div = $('<div/>').addClass('todo-item').attr('data-idx', i);
+                for (i = 0; i < todoList.length; i++) {
+                    todoMap = todoList[i];
+                    console.log(todoMap);
+                    if (todoMap) {
+                        date = todoMap.date;
+                        time = todoMap.time;
+                        checked = todoMap.done;
+                        dateStr = date + ' ' + time;
+                        $div = $('<div/>').addClass('todo-item').attr('data-id', todoMap._id);
                         $check = $('<div/>').addClass('todo-done').append('<input type="checkbox" size="3">');
                         $option = $('<div/>').addClass('todo-option');
                         $del = $('<div/>').addClass('todo-del').html('<i class="fa fa-trash-o"></i>');
                         $alarm = $('<div/>').addClass('todo-alarm').html('<i class="fa fa-bell-o"></i>');
-                        $text = $('<div/>').addClass('todo-text').text(todo_obj.text);
-                        $due = $('<div/>').addClass('todo-due').text(date_str);
-                        if (new Date(date_str).getTime() < new Date().getTime()) {
+                        $text = $('<div/>').addClass('todo-text').text(todoMap.text);
+                        $due = $('<div/>').addClass('todo-due').text(dateStr);
+                        if (new Date(dateStr).getTime() < new Date().getTime()) {
                             $text.addClass('item-due');
                         }
                         if (checked) {
@@ -64,46 +62,42 @@ zp.todo = (function () {
         });
         result.fail(function (err) {
             alert(err);
-        })
-        jqueryMap.$main.html('<div style="text-align:center">할일을 작성해주세요</div>');
+        });
+        jqueryMap.$main.html('<div class="no-content">할일을 작성해주세요</div>');
         return true;
     };
 
     onCheck = function () {
         var $text = $(this).parent().next(),
-            todo_list = JSON.parse(localStorage.todo),
-            i = $(this).closest('.todo-item').data('idx'),
-            change_map = localStorage.change ? JSON.parse(localStorage.change) : {c: [], u: [], d: []};
+            id = $(this).closest('.todo-item').data('id');
         if ($(this).is(':checked')) {
             $(this).prop('checked', true);
             $text.addClass('item-done');
-            todo_list[i].done = true;
+			zp.model.todoToggle(id, true);
         } else {
             $(this).prop('checked', false);
             $text.removeClass('item-done');
-            todo_list[i].done = false;
+            zp.model.todoToggle(id, false);
         }
-        change_map.u.push({cidx: i, type: 'todo'});
-        localStorage.todo = JSON.stringify(todo_list);
-        localStorage.change = JSON.stringify(change_map);
         return true;
     };
 
     onDelete = function () {
-        if (!confirm('삭제하시겠습니까?')) {
-            return false;
-        }
         var
             $item = $(this).closest('.todo-item'),
-            cidx = $item.data('idx'),
-            change_map = localStorage.change ? JSON.parse(localStorage.change) : {c: [], u: [], d: []},
-            todo_list = JSON.parse(localStorage.todo);
-        delete todo_list[cidx];
-        $item.remove();
-        localStorage.todo = JSON.stringify(todo_list);
-        change_map.d.push({cidx: cidx, type: 'todo'});
-        localStorage.change = JSON.stringify(change_map);
-        return true;
+            id = $item.data('id'),
+            result;
+		if (!confirm('삭제하시겠습니까?')) {
+			return false;
+		}
+		result = zp.model.deleteItem(id);
+		result.done(function () {
+			$item.remove();
+		});
+		result.fail(function () {
+			alert('오류 발생');
+		});
+		return true;
     };
 
     isMobile = function () {
@@ -121,7 +115,7 @@ zp.todo = (function () {
 
     setAlarm = function () {
         if (isMobile()) {
-            // todo: 모바일인지 확인
+            // todo: 모바일일 때 알람 구현
             alert('준비중입니다');
             return false;
         }

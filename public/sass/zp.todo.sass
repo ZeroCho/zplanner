@@ -1,37 +1,43 @@
 @import 'compass'
 .todo-item
-  position: relative
-  left: 10px
-  margin-bottom: 10px
-  .todo-done
-    display: inline-block
-    height: 40px
-    width: 20px
-  .todo-text
-    position: absolute
-    left: 20px
-    right: 30px
-    display: inline-block
-    height: 20px
-    font-size: 20px
-    font-weight: bold
-    text-overflow: ellipsis
-    overflow: hidden
-    white-space: nowrap
-  .todo-due
-    position: absolute
-    left: 20px
-    top: 20px
-    display: inline-block
-    height: 20px
-    font-size: 20px
-  .todo-option
-    position: absolute
-    right: 20px
-    display: inline-block
-    height: 40px
+	position: relative
+	left: 10px
+	margin-bottom: 10px
+	.todo-done
+		display: inline-block
+		height: 40px
+		width: 20px
+	.todo-text
+		position: absolute
+		left: 20px
+		right: 30px
+		display: inline-block
+		height: 24px
+		font-size: 20px
+		font-weight: bold
+		text-overflow: ellipsis
+		overflow: hidden
+		white-space: nowrap
+	.todo-due
+		position: absolute
+		left: 20px
+		top: 20px
+		display: inline-block
+		height: 20px
+		font-size: 20px
+	.todo-option
+		position: absolute
+		right: 20px
+		display: inline-block
+		height: 40px
+
 .item-due
-  color: crimson
+	color: crimson
+
 .item-done
-  color: lightgray
-  text-decoration: line-through
+	color: lightgray
+	text-decoration: line-through
+
+.no-content
+	text-align: center
+	margin-top: 20px

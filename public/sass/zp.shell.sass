@@ -7,89 +7,93 @@ $caret-margin: 10px
 $btn-height: $top - $btn-margin * 2
 $list: day plan todo
 .main-header
-  background: crimson
-  color: white
-  text-align: center
-  height: $top
-  position: absolute
-  top: 0
-  z-index: 10
-  width: 100%
-  border-bottom: 1px solid black
-  +user-select(none)
-  .info
-    line-height: $top
-  .user
-    position: absolute
-    top: 0
-    left: 0
-    cursor: pointer
-    .avatar
-      color: crimson
-      display: inline-block
-      background: white
-      border: 1px solid silver
-      text-align: center
-      margin: $btn-margin 4px
-      width: $btn-height
-      height: $btn-height
-      line-height: $btn-height
-      float: left
-    .name
-      float: left
-      line-height: $top
-    .menu
-      display: none
-      width: 100px
-      position: absolute
-      z-index: 1
-      top: 40px
-      background: white
-      color: black
-      li
-        border: 1px solid black
-        list-style-type: none
-  .tool
-    position: absolute
-    right: 0
-    top: 0
-    .tool-button
-      background: white
-      color: crimson
-      float: left
-      border: 1px solid silver
-      margin: $btn-margin 4px
-      width: $btn-height
-      height: $btn-height
-      line-height: $btn-height
-      &:hover
-        background: lightgray
-      &:active
-        background: gray
-  
+	background: crimson
+	color: white
+	text-align: center
+	height: $top
+	position: absolute
+	top: 0
+	z-index: 10
+	width: 100%
+	border-bottom: 1px solid black
+	+user-select(none)
+	.info
+		line-height: $top
+		.title-year, .title-month, .title-date, .title-week
+			cursor: pointer
+	.user
+		position: absolute
+		top: 0
+		left: 0
+		cursor: pointer
+		.avatar
+			color: crimson
+			display: inline-block
+			background: white
+			border: 1px solid silver
+			text-align: center
+			margin: $btn-margin 4px
+			width: $btn-height
+			height: $btn-height
+			line-height: $btn-height - 2
+			float: left
+		.name
+			float: left
+			line-height: $top
+		.menu
+			display: none
+			width: 150px
+			position: absolute
+			z-index: 1
+			top: 40px
+			background: white
+			color: black
+			li
+				border: 1px solid gray
+				list-style-type: none
+				height: 30px
+				line-height: 30px
+	.tool
+		position: absolute
+		right: 0
+		top: 0
+		.tool-button
+			background: white
+			color: crimson
+			float: left
+			border: 1px solid silver
+			margin: $btn-margin 4px
+			width: $btn-height
+			height: $btn-height
+			line-height: $btn-height
+			&:hover
+				background: lightgray
+			&:active
+				background: gray
+
 main
-  position: relative
-  top: $top
-  z-index: 1
-  overflow-y: auto
-  overflow-x: hidden
-  +user-select(none)
-  .flick-con
-    position: relative
-    top: 0
-    width: 100%
-    height: 100%
-    clear: both
-  .flick-panel
-    border-right: 1px solid black
-    border-bottom: 1px solid black
-    float: left
-    width: 100%
-    position: absolute
-    top: 0
-    &:first-child
-      left: 0
-    &:nth-child(2)
-      left: 100%
-    &:last-child
-      left: -100%
+	position: relative
+	top: $top
+	z-index: 1
+	overflow-y: auto
+	overflow-x: hidden
+	+user-select(none)
+	.flick-con
+		position: relative
+		top: 0
+		width: 100%
+		height: 100%
+		clear: both
+	.flick-panel
+		border-right: 1px solid black
+		border-bottom: 1px solid black
+		float: left
+		width: 100%
+		position: absolute
+		top: 0
+		&:first-child
+			left: 0
+		&:nth-child(2)
+			left: 100%
+		&:last-child
+			left: -100%

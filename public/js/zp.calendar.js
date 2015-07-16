@@ -766,16 +766,16 @@ zp.calendar = (function () {
 
 	dayOfYear = function (date, month, year) {
 		var
-			days_in_month = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+			daysList = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
 			i = 0,
             total = 0;
 		if (!year) {year = new Date().getFullYear();}
-		if (daysInMonth(2, year) === 29) {days_in_month[1] = 29;}
+		if (daysInMonth(2, year) === 29) {daysList[1] = 29;}
 		// 인자로 년월일을 입력했을 경우
 		if (month) {
 			// 전달까지의 날짜를 다 더한다
 			while (i < month - 1) {
-				total += days_in_month[i];
+				total += daysList[i];
 				i++;
 			}
 			total += date;
@@ -783,11 +783,11 @@ zp.calendar = (function () {
 		}
 		// 인자로 0~366 사이의 숫자를 입력했을 경우
 		while (date > 0) {
-			date -= days_in_month[i];
+			date -= daysList[i];
 			i++;
 		}
 		month = i;
-		date = date + days_in_month[i - 1];
+		date += daysList[i - 1];
 		return {
 			month: month,
 			date: date,
@@ -804,17 +804,15 @@ zp.calendar = (function () {
 
 	// 해당주의 날짜들을 배열로 돌려주는 함수
 	getWeekDay = function (week, year) {
+		var
+			i = 0,
+			firstDay = new Date(year, 0, 1).getDay(),
+			list = [],
+			days, result;
 		if (!year) {
 			year = new Date().getFullYear();
 		}
-
-		var
-			i = 0,
-			first_day = new Date(year, 0, 1).getDay(),
-			list = [],
-			days, result
-		;
-		days = week * 7 - first_day - 6;
+		days = week * 7 - firstDay - 6;
 		for (i; i < 7; i++) {
 			result = dayOfYear(days);
 			list[i] = {
@@ -829,23 +827,22 @@ zp.calendar = (function () {
 	// 해당일이 그 해의 몇 번째 주인지 찾는 함수
 	// 인자: date, month[, year] 또는 dateString
 	getWeekNum = function (date, month, year) {
+		var
+			firstDay = new Date(year, 0, 1).getDay(),
+			dayOfToday = new Date(year, month - 1, date).getDay(),
+			offset = 6 - dayOfToday,
+			weekNum, total;
 		if (!year) {
 			year = new Date().getFullYear();
 		}
-		var
-			first_day = new Date(year, 0, 1).getDay(),
-			day_of_today = new Date(year, month - 1, date).getDay(),
-			offset = 6 - day_of_today,
-			num_week, total;
-
-		total = dayOfYear(date, month, year) + first_day + offset;
-		num_week = Math.floor(total / 7);
+		total = dayOfYear(date, month, year) + firstDay + offset;
+		weekNum = Math.floor(total / 7);
 
 		// 각 달의 1일이 금, 토면 그 주는 전달 마지막 주로 친다.
-		if (first_day > 4) {
-			num_week -= 1;
+		if (firstDay > 4) {
+			weekNum -= 1;
 		}
-		return num_week;
+		return weekNum;
 	};
 
 	return {

@@ -1,3 +1,4 @@
+/* line 23, ../sass/zp.modal.sass */
 .modal {
   position: absolute;
   top: 0;
@@ -11,6 +12,7 @@
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
 }
+/* line 33, ../sass/zp.modal.sass */
 .modal .modal-back {
   position: absolute;
   font-weight: bold;
@@ -18,22 +20,35 @@
   line-height: 36px;
   cursor: pointer;
   left: 10px;
-  top: 5px;
+  top: 8px;
+  z-index: 10;
 }
+/* line 42, ../sass/zp.modal.sass */
 .modal .modal-close {
   position: absolute;
   font-size: 30px;
   line-height: 36px;
   cursor: pointer;
   right: 10px;
+  top: 8px;
+  z-index: 10;
 }
-.modal .modal-logo {
-  font-style: italic;
-  font-size: 3em;
+/* line 50, ../sass/zp.modal.sass */
+.modal #modal-logo {
+  font-family: roboto, sans-serif;
+  font-size: 4em;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 50px;
+}
+/* line 55, ../sass/zp.modal.sass */
+.modal .modal-title {
+  position: absolute;
+  width: 100%;
+  line-height: 50px;
+  text-align: center;
 }
 
+/* line 61, ../sass/zp.modal.sass */
 #modal-login {
   width: 80%;
   margin: 0 auto;
@@ -41,139 +56,39 @@
   top: 50%;
   transform: translateY(-50%);
 }
-#modal-login .login-input input {
-  width: 100%;
-  height: 25px;
-  line-height: 25px;
-  font-size: 20px;
-  margin-bottom: 10px;
+/* line 63, ../sass/zp.modal.sass */
+#modal-login input {
+  height: 20px;
+  line-height: 20px;
 }
-#modal-login .login-btn button {
-  width: 100%;
-  height: 25px;
+/* line 65, ../sass/zp.modal.sass */
+#modal-login #login-sbmt {
+  height: 20px;
   background: transparent;
   color: crimson;
   border: 1px solid gray;
-  font-family: "Nanum Gothic";
-  margin-bottom: 20px;
+  font-family: "Nanum Gothic", sans-serif;
   text-align: center;
   cursor: pointer;
-}
-#modal-login .join-btn, #modal-login .findpw-btn, #modal-login .offline-btn {
-  border: 1px solid gray;
-  text-align: center;
-  cursor: pointer;
-  margin-bottom: 3px;
-}
-
-#modal-menu .menu {
-  float: left;
-  width: 50%;
-  border: 1px solid silver;
-  color: crimson;
-}
-
-#modal-todo {
-  height: 100%;
-}
-#modal-todo form {
-  width: 80%;
-  margin: 0 auto;
-  position: relative;
-  top: 50%;
-  transform: translateY(-50%);
-}
-#modal-todo .todo-input input {
-  width: 100%;
-  height: 25px;
-  line-height: 25px;
-  font-size: 20px;
+  margin-top: 10px;
   margin-bottom: 10px;
 }
-#modal-todo .todo-btn button {
-  width: 100%;
-  height: 25px;
+/* line 69, ../sass/zp.modal.sass */
+#modal-login #join-btn, #modal-login #findpw-btn, #modal-login #offline-btn {
+  height: 20px;
   background: transparent;
   color: crimson;
   border: 1px solid gray;
-  font-family: "Nanum Gothic";
-  margin-bottom: 20px;
+  font-family: "Nanum Gothic", sans-serif;
   text-align: center;
   cursor: pointer;
 }
 
-#modal-search {
-  width: 80%;
-  margin: 0 auto;
-  position: relative;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-#modal-plan {
-  height: 100%;
-}
-#modal-plan form {
-  width: 80%;
-  margin: 0 auto;
-  position: relative;
-  top: 50%;
-  transform: translateY(-50%);
-}
-#modal-plan .plan-input input {
-  width: 100%;
-  height: 25px;
-  line-height: 25px;
-  font-size: 20px;
-  margin-bottom: 10px;
-}
-#modal-plan .plan-btn button {
-  width: 100%;
-  height: 25px;
-  background: transparent;
-  color: crimson;
-  border: 1px solid gray;
-  font-family: "Nanum Gothic";
-  margin-bottom: 20px;
-  text-align: center;
-  cursor: pointer;
-}
-
-#modal-dday {
-  height: 100%;
-}
-#modal-dday form {
-  width: 80%;
-  margin: 0 auto;
-  position: relative;
-  top: 50%;
-  transform: translateY(-50%);
-}
-#modal-dday .dday-input input {
-  width: 100%;
-  height: 25px;
-  line-height: 25px;
-  font-size: 20px;
-  margin-bottom: 10px;
-}
-#modal-dday .dday-btn button {
-  width: 100%;
-  height: 25px;
-  background: transparent;
-  color: crimson;
-  border: 1px solid gray;
-  font-family: "Nanum Gothic";
-  margin-bottom: 20px;
-  text-align: center;
-  cursor: pointer;
-}
-
+/* line 72, ../sass/zp.modal.sass */
 #modal-join {
   height: 100%;
 }
-#modal-join header {
-  text-align: center;
-}
+/* line 74, ../sass/zp.modal.sass */
 #modal-join form {
   width: 80%;
   margin: 0 auto;
@@ -181,33 +96,76 @@
   top: 50%;
   transform: translateY(-50%);
 }
+/* line 76, ../sass/zp.modal.sass */
 #modal-join form #join-agree {
   height: auto;
 }
-#modal-join form #check-email-btn {
-  height: 25px;
+/* line 78, ../sass/zp.modal.sass */
+#modal-join form #check-id-btn {
+  height: 20px;
   background: transparent;
-  font-family: "Nanum Gothic";
+  font-family: "Nanum Gothic", sans-serif;
   text-align: center;
   cursor: pointer;
   border: 1px solid gray;
 }
+/* line 85, ../sass/zp.modal.sass */
 #modal-join form input {
-  height: 25px;
+  height: 20px;
 }
+/* line 87, ../sass/zp.modal.sass */
 #modal-join form #join-sbmt {
-  width: 100%;
-  height: 25px;
+  height: 20px;
   background: transparent;
   color: crimson;
   border: 1px solid gray;
-  font-family: "Nanum Gothic";
-  margin-bottom: 20px;
+  font-family: "Nanum Gothic", sans-serif;
   text-align: center;
   cursor: pointer;
 }
 
+/* line 90, ../sass/zp.modal.sass */
 #modal-findpw {
+  height: 100%;
+}
+/* line 92, ../sass/zp.modal.sass */
+#modal-findpw .findpw-header {
+  text-align: center;
+}
+/* line 94, ../sass/zp.modal.sass */
+#modal-findpw #findpw-id-sbmt, #modal-findpw #findpw-ans-sbmt, #modal-findpw #findpw-newpw-sbmt {
+  height: 20px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic", sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+/* line 96, ../sass/zp.modal.sass */
+#modal-findpw #findpw-forms {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+/* line 98, ../sass/zp.modal.sass */
+#modal-findpw input {
+  height: 20px;
+  line-height: 20px;
+}
+
+/* line 102, ../sass/zp.modal.sass */
+#modal-menu .menu {
+  float: left;
+  width: 50%;
+  border: 1px solid silver;
+  color: crimson;
+}
+
+/* line 108, ../sass/zp.modal.sass */
+#modal-search {
   width: 80%;
   margin: 0 auto;
   position: relative;
@@ -215,26 +173,117 @@
   transform: translateY(-50%);
 }
 
+/* line 111, ../sass/zp.modal.sass */
+#modal-todo {
+  height: 100%;
+}
+/* line 113, ../sass/zp.modal.sass */
+#modal-todo form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+/* line 115, ../sass/zp.modal.sass */
+#modal-todo input {
+  height: 20px;
+  line-height: 20px;
+}
+/* line 117, ../sass/zp.modal.sass */
+#modal-todo #todo-sbmt {
+  height: 20px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic", sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* line 120, ../sass/zp.modal.sass */
+#modal-plan {
+  height: 100%;
+}
+/* line 122, ../sass/zp.modal.sass */
+#modal-plan form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+/* line 124, ../sass/zp.modal.sass */
+#modal-plan input {
+  height: 20px;
+  line-height: 20px;
+}
+/* line 126, ../sass/zp.modal.sass */
+#modal-plan #plan-sbmt {
+  height: 20px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic", sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* line 129, ../sass/zp.modal.sass */
+#modal-dday {
+  height: 100%;
+}
+/* line 131, ../sass/zp.modal.sass */
+#modal-dday form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  transform: translateY(-50%);
+}
+/* line 133, ../sass/zp.modal.sass */
+#modal-dday input {
+  height: 20px;
+  line-height: 20px;
+}
+/* line 135, ../sass/zp.modal.sass */
+#modal-dday #dday-sbmt {
+  height: 20px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic", sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* line 138, ../sass/zp.modal.sass */
 #modal-type {
   height: 100%;
 }
+/* line 140, ../sass/zp.modal.sass */
 #modal-type .wrapper {
+  width: 100%;
+  overflow: auto;
   top: 50%;
   transform: translateY(-50%);
   position: relative;
 }
-#modal-type #type-todo, #modal-type #type-plan, #modal-type #type-dday {
+/* line 146, ../sass/zp.modal.sass */
+#modal-type .type-list {
+  float: left;
+  width: 33.33333%;
   text-align: center;
   font-size: 30px;
-  line-height: 50px;
-  border: 1px solid black;
-  height: 50px;
+  line-height: 200px;
 }
 
+/* line 153, ../sass/zp.modal.sass */
 #modal-search {
   height: 100%;
   width: 100%;
 }
+/* line 156, ../sass/zp.modal.sass */
 #modal-search form {
   width: 80%;
   margin: 0 auto;
@@ -243,12 +292,14 @@
   position: relative;
 }
 
+/* line 163, ../sass/zp.modal.sass */
 #search-date {
   width: 100%;
   height: 30px;
   margin-bottom: 10px;
 }
 
+/* line 168, ../sass/zp.modal.sass */
 #search-btn, #search-today {
   width: 49%;
   border: 1px solid silver;

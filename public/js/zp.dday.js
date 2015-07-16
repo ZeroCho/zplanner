@@ -43,19 +43,18 @@ zp.dday = (function () {
 
 	showDday = function () {
 		var
-			$text, $div, $del, dday_obj, $target, $left, target, i,
-			$frag = $(document.createDocumentFragment());
-		zp.model.getDday();
-		$.gevent.subscribe(jqueryMap.$main, 'getDday', function (e, dday_list) {
-			e.preventDefault();
+			$text, $div, $del, ddayMap, $target, $left, target, i,
+			$frag = $(document.createDocumentFragment()),
+			result = zp.model.getDday();
+		result.done(function (dday_list) {
 			if (dday_list.length) {
 				jqueryMap.$main.html('');
 				for (i = 0; i < dday_list.length; i++) {
-					dday_obj = dday_list[i];
-					if (dday_obj) {
-						target = dday_obj.target;
-						$div = $('<div/>').addClass('dday-item').attr('data-idx', i);
-						$text = $('<div/>').addClass('dday-text').text(dday_obj.text);
+					ddayMap = dday_list[i];
+					if (ddayMap) {
+						target = ddayMap.target;
+						$div = $('<div/>').addClass('dday-item').attr('data-id', ddayMap._id);
+						$text = $('<div/>').addClass('dday-text').text(ddayMap.text);
 						$target = $('<div/>').addClass('dday-target').text(target);
 						$left = $('<div/>').addClass('dday-left').text(calculate(target));
 						$del = $('<div/>').addClass('dday-del').html('<i class="fa fa-trash-o"></i>');
@@ -66,24 +65,27 @@ zp.dday = (function () {
 				jqueryMap.$main.append($frag);
 			}
 		});
-		jqueryMap.$main.html('<div style="text-align:center">기념일이나 D-day를 작성해주세요</div>');
+		result.fail(function (err) {
+			alert(err);
+		});
+		jqueryMap.$main.html('<div class="no-content">기념일이나 D-day를 작성해주세요</div>');
 		return true;
 	};
 
 	onDelete = function () {
+		var
+			$item = $(this).closest('.dday-item'),
+			id = $item.data('id'), result;
 		if (!confirm('삭제하시겠습니까?')) {
 			return false;
 		}
-		var 
-			$item = $(this).closest('.dday-item'),
-			cidx = $item.data('idx'),
-			change_map = localStorage.change ? JSON.parse(localStorage.change) : {c: [], u: [], d: []},
-			dday_list = JSON.parse(localStorage.dday);
-		delete dday_list[cidx];
-		$item.remove();
-		localStorage.dday = JSON.stringify(dday_list);
-		change_map.d.push({cidx: cidx, type: 'dday'});
-		localStorage.change = JSON.stringify(change_map);
+		result = zp.model.deleteItem(id);
+		result.done(function () {
+			$item.remove();
+		});
+		result.fail(function () {
+			alert('오류 발생');
+		});
 		return true;
 	};
 
@@ -127,24 +129,14 @@ zp.dday = (function () {
 		var data = e.data,
 			$target = $(data.target),
 			update = $target.find('input').val(),
-			change_obj, dday_list, cidx, date;
+			id, date;
 		if (data.origin === update) {
 			$target.empty().text(data.origin); 			
 			return;	
 		}
 		$target.empty().text(update);
-		change_obj = JSON.parse(localStorage.change);
-		dday_list = JSON.parse(localStorage.dday);
-		cidx = $target.parent('.dday-item').data('idx');
+		id = $target.parent('.dday-item').data('id');
 		date = update.substr(0, 10);
-		alert(cidx);
-		dday_list[cidx].target = date;
-		change_obj.u.push({
-			cidx: cidx,
-			type: 'dday'
-		});
-		localStorage.dday = JSON.stringify(dday_list);
-		localStorage.change = JSON.stringify(change_obj); 		
 	};
 	
 	applyText = function (e) {
@@ -159,7 +151,7 @@ zp.dday = (function () {
 		$target.empty().text(update);
 		change_obj = JSON.parse(localStorage.change);
 		dday_list = JSON.parse(localStorage.dday);
-		cidx = $target.parent('.dday-item').data('idx');
+		cidx = $target.parent('.dday-item').data('id');
 		alert(cidx);
 		dday_list[cidx].text = update;
 		change_obj.u.push({

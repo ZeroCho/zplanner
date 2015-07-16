@@ -1,4 +1,4 @@
-@media -sass-debug-info{filename{font-family:file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass}line{font-family:\000039}}
+/* line 10, ../sass/zp.day.sass */
 .dday-table {
   width: 100%;
   -moz-user-select: -moz-none;
@@ -6,7 +6,7 @@
   -webkit-user-select: none;
   user-select: none;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass}line{font-family:\0000312}}
+/* line 13, ../sass/zp.day.sass */
 .dday-table td {
   border-top: 1px solid silver;
   height: 40px;
@@ -15,7 +15,7 @@
   text-align: center;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass}line{font-family:\0000319}}
+/* line 20, ../sass/zp.day.sass */
 .plan-table {
   width: 100%;
   -moz-user-select: -moz-none;
@@ -23,15 +23,15 @@
   -webkit-user-select: none;
   user-select: none;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass}line{font-family:\0000322}}
+/* line 23, ../sass/zp.day.sass */
 .plan-table td {
-  border-top: 1px solid silver;
+  border-top: 1px solid gray;
   height: 40px;
   text-align: center;
   color: silver;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass}line{font-family:\0000327}}
+/* line 29, ../sass/zp.day.sass */
 .todo {
   position: absolute;
   width: 100%;
@@ -40,47 +40,47 @@
   height: 39px;
   text-align: center;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass}line{font-family:\0000334}}
+/* line 36, ../sass/zp.day.sass */
 .todo .input {
   height: 39px;
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
+  line-height: 39px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass}line{font-family:\0000337}}
+/* line 39, ../sass/zp.day.sass */
 .plan {
   background: skyblue;
   text-align: center;
 }
-@media -sass-debug-info{filename{font-family:file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass}line{font-family:\0000340}}
+/* line 42, ../sass/zp.day.sass */
 .plan .input {
   height: 39px;
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
+  line-height: 39px;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass}line{font-family:\0000343}}
+/* line 45, ../sass/zp.day.sass */
 .dday {
   background: red;
   height: 39px;
   text-align: center;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass}line{font-family:\0000348}}
+/* line 50, ../sass/zp.day.sass */
 .whole {
   background: skyblue;
   height: 39px;
   text-align: center;
 }
 
-@media -sass-debug-info{filename{font-family:file\:\/\/C\:\/Users\/Zero\/WebstormProjects\/zecretary\/public\/sass\/zp\.day\.sass}line{font-family:\0000353}}
+/* line 55, ../sass/zp.day.sass */
 .time-indicator {
   background: crimson;
   height: 1px;
   width: 100%;
   position: absolute;
 }
-
-/*# sourceMappingURL=zp.day.css.map */

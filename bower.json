@@ -19,6 +19,8 @@
   "dependencies": {
     "jquery": "~2.1.4",
     "pouchdb": "~3.6.0",
-    "pouchdb-authentication": "~0.4.0"
+    "pouchdb-authentication": "~0.4.0",
+    "crypto-js": "~3.1.5",
+    "pouchdb-find": "~0.3.5"
   }
 }

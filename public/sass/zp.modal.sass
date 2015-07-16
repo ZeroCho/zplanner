@@ -1,170 +1,173 @@
 @import 'compass'
 =modal-position()
-  width: 80%
-  margin: 0 auto
-  position: relative
-  top: 50%
-  transform: translateY(-50%)
-$input-height: 25px
+	width: 80%
+	margin: 0 auto
+	position: relative
+	top: 50%
+	transform: translateY(-50%)
+$input-height: 20px
 $input-margin: 10px
 =input-position()
-  width: 100%
-  height: $input-height
-  line-height: $input-height
-  font-size: 20px
-  margin-bottom: $input-margin
+	height: $input-height
+	line-height: $input-height
 
 =button-style()
-  width: 100%
-  height: $input-height
-  background: transparent
-  color: crimson
-  border: 1px solid gray
-  font-family: 'Nanum Gothic'
-  margin-bottom: 20px
-  text-align: center
-  cursor: pointer
+	height: $input-height
+	background: transparent
+	color: crimson
+	border: 1px solid gray
+	font-family: 'Nanum Gothic', sans-serif
+	text-align: center
+	cursor: pointer
 
 .modal
-  position: absolute
-  top: 0
-  height: 100%
-  width: 100%
-  background: white
-  color: crimson
-  display: none
-  z-index: 100
-  +box-sizing(border-box)
-  .modal-back
-    position: absolute
-    font-weight: bold
-    font-size: 28px
-    line-height: 36px
-    cursor: pointer
-    left: 10px
-    top: 5px
-  .modal-close
-    position: absolute
-    font-size: 30px
-    line-height: 36px
-    cursor: pointer
-    right: 10px
-  .modal-logo
-    font-style: italic
-    font-size: 3em
-    text-align: center
-    margin-bottom: 20px
+	position: absolute
+	top: 0
+	height: 100%
+	width: 100%
+	background: white
+	color: crimson
+	display: none
+	z-index: 100
+	+box-sizing(border-box)
+	.modal-back
+		position: absolute
+		font-weight: bold
+		font-size: 28px
+		line-height: 36px
+		cursor: pointer
+		left: 10px
+		top: 8px
+		z-index: 10
+	.modal-close
+		position: absolute
+		font-size: 30px
+		line-height: 36px
+		cursor: pointer
+		right: 10px
+		top: 8px
+		z-index: 10
+	#modal-logo
+		font-family: roboto, sans-serif
+		font-size: 4em
+		text-align: center
+		margin-bottom: 50px
+	.modal-title
+		position: absolute
+		width: 100%
+		line-height: 50px
+		text-align: center
 
 #modal-login
-  +modal-position()
-  .login-input
-    input
-      +input-position()
-  .login-btn button
-    +button-style
-  .join-btn, .findpw-btn, .offline-btn
-    border: 1px solid gray
-    text-align: center
-    cursor: pointer
-    margin-bottom: 3px
-
-#modal-menu
-  .menu
-    float: left
-    width: 50%
-    border: 1px solid silver
-    color: crimson
-
-#modal-todo
-  height: 100%
-  form
-    +modal-position()
-  .todo-input
-    input
-      +input-position
-  .todo-btn
-    button
-      +button-style
-
-#modal-search
-  +modal-position
-
-#modal-plan
-  height: 100%
-  form
-    +modal-position()
-  .plan-input
-    input
-      +input-position()
-  .plan-btn
-    button
-      +button-style
-
-#modal-dday
-  height: 100%
-  form
-    +modal-position()
-  .dday-input
-    input
-      +input-position()
-  .dday-btn
-    button
-      +button-style
+	+modal-position()
+	input
+		+input-position()
+	#login-sbmt
+		+button-style
+		margin-top: 10px
+		margin-bottom: 10px
+	#join-btn, #findpw-btn, #offline-btn
+		+button-style
 
 #modal-join
-  height: 100%
-  header
-    text-align: center
-  form
-    +modal-position
-    #join-agree
-      height: auto
-    #check-email-btn
-      height: $input-height
-      background: transparent
-      font-family: "Nanum Gothic"
-      text-align: center
-      cursor: pointer
-      border: 1px solid gray
-    input
-      height: $input-height
-    #join-sbmt
-      +button-style
+	height: 100%
+	form
+		+modal-position
+		#join-agree
+			height: auto
+		#check-id-btn
+			height: $input-height
+			background: transparent
+			font-family: "Nanum Gothic", sans-serif
+			text-align: center
+			cursor: pointer
+			border: 1px solid gray
+		input
+			height: $input-height
+		#join-sbmt
+			+button-style
 
 #modal-findpw
-  +modal-position()
+	height: 100%
+	.findpw-header
+		text-align: center
+	#findpw-id-sbmt, #findpw-ans-sbmt, #findpw-newpw-sbmt
+		+button-style
+	#findpw-forms
+		+modal-position
+	input
+		+input-position
 
-#modal-type
-  height: 100%
-  .wrapper
-    top: 50%
-    transform: translateY(-50%)
-    position: relative
-  #type-todo, #type-plan, #type-dday
-    text-align: center
-    font-size: 30px
-    line-height: 50px
-    border: 1px solid black
-    height: 50px
+#modal-menu
+	.menu
+		float: left
+		width: 50%
+		border: 1px solid silver
+		color: crimson
 
 #modal-search
-  height: 100%
-  width: 100%
-  form
-    width: 80%
-    margin: 0 auto
-    top: 50%
-    transform: translateY(-50%)
-    position: relative
+	+modal-position
+
+#modal-todo
+	height: 100%
+	form
+		+modal-position()
+	input
+		+input-position
+	#todo-sbmt
+		+button-style
+
+#modal-plan
+	height: 100%
+	form
+		+modal-position()
+	input
+		+input-position()
+	#plan-sbmt
+		+button-style()
+
+#modal-dday
+	height: 100%
+	form
+		+modal-position()
+	input
+		+input-position()
+	#dday-sbmt
+		+button-style
+
+#modal-type
+	height: 100%
+	.wrapper
+		width: 100%
+		overflow: auto
+		top: 50%
+		transform: translateY(-50%)
+		position: relative
+	.type-list
+		float: left
+		width: (100%) / 3
+		text-align: center
+		font-size: 30px
+		line-height: 200px
+
+#modal-search
+	height: 100%
+	width: 100%
+	form
+		width: 80%
+		margin: 0 auto
+		top: 50%
+		transform: translateY(-50%)
+		position: relative
 
 #search-date
-  width: 100%
-  height: 30px
-  margin-bottom: 10px
+	width: 100%
+	height: 30px
+	margin-bottom: 10px
 
 #search-btn, #search-today
-  width: 49%
-  border: 1px solid silver
-  height: 40px
-  color: crimson
-  background: white
+	width: 49%
+	border: 1px solid silver
+	height: 40px
+	color: crimson
+	background: white

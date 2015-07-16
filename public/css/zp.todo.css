@@ -1,25 +1,29 @@
+/* line 2, ../sass/zp.todo.sass */
 .todo-item {
   position: relative;
   left: 10px;
   margin-bottom: 10px;
 }
+/* line 6, ../sass/zp.todo.sass */
 .todo-item .todo-done {
   display: inline-block;
   height: 40px;
   width: 20px;
 }
+/* line 10, ../sass/zp.todo.sass */
 .todo-item .todo-text {
   position: absolute;
   left: 20px;
   right: 30px;
   display: inline-block;
-  height: 20px;
+  height: 24px;
   font-size: 20px;
   font-weight: bold;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
 }
+/* line 21, ../sass/zp.todo.sass */
 .todo-item .todo-due {
   position: absolute;
   left: 20px;
@@ -28,6 +32,7 @@
   height: 20px;
   font-size: 20px;
 }
+/* line 28, ../sass/zp.todo.sass */
 .todo-item .todo-option {
   position: absolute;
   right: 20px;
@@ -35,11 +40,19 @@
   height: 40px;
 }
 
+/* line 34, ../sass/zp.todo.sass */
 .item-due {
   color: crimson;
 }
 
+/* line 37, ../sass/zp.todo.sass */
 .item-done {
   color: lightgray;
   text-decoration: line-through;
+}
+
+/* line 41, ../sass/zp.todo.sass */
+.no-content {
+  text-align: center;
+  margin-top: 20px;
 }

@@ -1,234 +1,329 @@
 zp.model = (function () {
-    'use strict';
-    var configMap = {
-            anon_idx: 0
-        },
-        stateMap = {
-            anon_user: null,
-            db: new PouchDB('anon')
-        },
-        initModule,
-        set_dday, get_dday, sync, login, join, check_email,
-        set_todo, set_plan, get_todo, get_plan, get_info, upload, download;
-
-    check_email = function (email) {
-        var db = new PouchDB('http://zerohch0.iriscouch.com/members'),
-            deferred = $.Deferred();
-        db.get(email).then(function (doc) {
-            console.log(doc);
-            deferred.reject(doc);
-        }).catch(function (err) {
-            console.log(err);
-            deferred.resolve(err);
-        });
-        return deferred.promise();
-    };
-
-    join = function (data) {
-        var db = new PouchDB('http://zerohch0.iriscouch.com/members'),
-            deferred = $.Deferred();
-        db.put(data).then(function (doc) {
-            console.log(doc);
-            deferred.resolve(doc);
-        }).catch(function (err) {
-            console.log(err);
-            deferred.reject(err);
-        });
-        return deferred.promise();
-    };
-
-    login = function (data) {
-        var deferred = $.Deferred(),
-            db = new PouchDB('http://zerohch0.iriscouch.com/members');
-        db.get(data.email, {include_docs: true}).then(function (doc) {
-            console.log(doc);
-            if (doc.pw === data.pw) {
-                deferred.resolve(doc);
-            } else {
-                deferred.reject('비밀번호가 틀립니다.');
-            }
-        }).catch(function (err) {
-            console.log(err);
-            deferred.reject('아이디가 존재하지 않습니다.');
-        });
-        return deferred.promise();
-    };
-
-    set_todo = function (data) {
-        var db = new PouchDB('anon'),
-            deferred = $.Deferred();
-        if (localStorage.user === 'anon') {
-            db = new PouchDB('anon');
-        } else {
-            db = new PouchDB(JSON.parse(localStorage.user)._id);
-        }
-        db.put(data).then(function (result) {
-            deferred.resolve(result);
-            return true;
-        }).catch(function (err) {
-            console.log(err);
-            deferred.reject(err);
-            return false;
-        });
-        return deferred.promise();
-    };
-
-    get_todo = function () {
-        var todo = [], i = 0, rows, len,
-            deferred = $.Deferred(),
-            db = new PouchDB('anon');
-        db.allDocs({
-            include_docs: true
-        }).then(function (todos) {
-            console.log(todos);
-            rows = todos.rows;
-            len = rows.length;
-            for (i; i < len; i++) {
-                console.log(rows[i]);
-                todo.push(rows[i].doc);
-            }
-            deferred.resolve(todo);
-        }).catch(function (err) {
-            console.log('todo', err);
-            deferred.reject(err);
-        });
-        return deferred.promise();
-    };
-
-    set_plan = function (data) {
-        var db = new PouchDB('anon'),
-            deferred = $.Deferred();
-        db.put(data).then(function (result) {
-            $.gevent.publish('submit', ['plan']);
-            console.log('plan registered', result);
-            return true;
-        }).catch(function (err) {
-            console.log(err);
-            alert('error!');
-            return false;
-        });
-        return deferred.promise();
-    };
-
-    get_plan = function () {
-        var plan = [], i = 0, rows, len,
-            deferred = $.Deferred();
-        configMap.plans.allDocs({
-            include_docs: true,
-            attachments: true
-        }).then(function (plans) {
-            console.log(plans);
-            rows = plans.rows;
-            len = rows.length;
-            for (i; i < len; i++) {
-                console.log(rows[i]);
-                plan.push(rows[i].doc);
-            }
-            $.gevent.publish('getPlan', [plan]);
-        }).catch(function (err) {
-            console.log('plan', err);
-        });
-        return deferred.promise();
-    };
-
-    set_dday = function (data) {
-        var db = new PouchDB('anon'),
-            deferred = $.Deferred();
-        db.put(data).then(function (result) {
-           deferred.resolve(result);
-            return true;
-        }).catch(function (err) {
-            deferred.reject(err);
-            return false;
-        });
-        return deferred.promise();
-    };
-
-    get_dday = function () {
-        var dday = [], i = 0, rows, len,
-            deferred = $.Deferred(),
-            db = new PouchDB('anon');
-        db.allDocs({
-            include_docs: true
-        }).then(function (ddays) {
-            console.log(ddays);
-            rows = ddays.rows;
-            len = rows.length;
-            for (i; i < len; i++) {
-                console.log(rows[i]);
-                dday.push(rows[i].doc);
-            }
-            $.gevent.publish('getDday', [dday]);
-        }).catch(function (err) {
-            console.log('dday', err);
-        });
-        return deferred.promise();
-    };
-
-    get_info = function () {
-        return true;
-    };
-
-    sync = function (email) {
-        var deferred = $.Deferred(),
-            local = new PouchDB('anon');
-        local.replicate.to('http://zerohch0.iriscouch.com/' + email, {live: true}, function (err) {
-            console.log(err);
-        });
-        local.replicate.from('http://zerohch0.iriscouch.com/' + email, {live: true}, function (err) {
-            console.log(err);
-        });
-        return deferred.promise();
-    };
-
-    upload = function (email) {
-        var deferred = $.Deferred(),
-            local = new PouchDB('anon');
-        local.replicate.to('http://zerohch0.iriscouch.com/' + email, {live: true}, function (err) {
-            if (err) {
-                console.log(err);
-                deferred.reject(err);
-            } else {
-                deferred.resolve();
-            }
-        });
-        return deferred.promise();
-    };
-    download = function (email) {
-        var deferred = $.Deferred(),
-            local = new PouchDB('anon');
-        local.replicate.from('http://zerohch0.iriscouch.com/' + email, {live: true}, function (err) {
-            if (err) {
-                console.log(err);
-                deferred.reject(err);
-            } else {
-                deferred.resolve();
-            }
-        });
-        return deferred.promise();
-    };
-
-    initModule = function () {
-        if (localStorage.online === 'false') {
-            stateMap.anon_user = true;
-        }
-        return true;
-    };
-
-    return {
-        initModule: initModule,
-        login: login,
-        setTodo: set_todo,
-        getTodo: get_todo,
-        setPlan: set_plan,
-        getPlan: get_plan,
-        getInfo: get_info,
-        setDday: set_dday,
-        getDday: get_dday,
-        sync: sync,
-        join: join,
-        checkEmail: check_email,
-        upload: upload,
-        download: download
-    };
+	'use strict';
+	var
+		stateMap = {
+			local_db : null,
+			remote_db: null,
+			dbhost   : null
+		},
+		initModule, configModule, deleteItem, todoToggle,
+		setDday, getDday, sync, login, join, checkId, logout, findId, changePw,
+		setTodo, setPlan, getTodo, getPlan, getInfo, upload, download, checkAnswer;
+	// 로그인 로그아웃 관련 함수
+	login = function (data) {
+		var deferred = $.Deferred(),
+			db = stateMap.remote_db;
+		db.login(data.id, data.pw).then(function () {
+			return db.getUser(data.id);
+		}).then(function (doc) {
+			deferred.resolve(doc);
+			console.log(doc);
+		}).catch(function (err) {
+			deferred.reject(err);
+		});
+		return deferred.promise();
+	};
+	logout = function () {
+		var deferred = $.Deferred(),
+			db = stateMap.remote_db;
+		db.logout().then(function (doc) {
+			deferred.resolve(doc);
+			configModule();
+			console.log(doc);
+		}).catch(function (err) {
+			deferred.reject(err);
+		});
+		return deferred.promise();
+	};
+	//
+	checkId = function (id) {
+		var db = stateMap.remote_db,
+			deferred = $.Deferred();
+		db.getUser(id).then(function (doc) {
+			console.log(doc);
+			deferred.reject(doc);
+		}).catch(function (err) {
+			console.log(err);
+			deferred.resolve(err);
+		});
+		return deferred.promise();
+	};
+	join = function (data) {
+		var db = stateMap.remote_db,
+			deferred = $.Deferred();
+		db.signup(data.id, data.pw, {
+			metadata: {
+				email : data.email,
+				nick  : data.nick,
+				qst   : data.qst,
+				ans   : data.ans,
+				avatar: data.avatar
+			}
+		}).then(function (doc) {
+			console.log(doc);
+			deferred.resolve(doc);
+		}).catch(function (err) {
+			console.log(err);
+			deferred.reject(err);
+		});
+		return deferred.promise();
+	};
+	findId = function (id) {
+		var deferred = $.Deferred(),
+			db = stateMap.remote_db;
+		db.getUser(id).then(function (doc) {
+			console.log(doc);
+			deferred.resolve(doc);
+		}).catch(function (err) {
+			console.log(err);
+			deferred.reject(err);
+		});
+		return deferred.promise();
+	};
+	checkAnswer = function (data) {
+		var deferred = $.Deferred(),
+			db = stateMap.remote_db;
+		db.getUser(data.id).then(function (doc) {
+			if (data.ans === doc.ans) {
+				deferred.resolve(doc);
+			} else {
+				deferred.reject('wrong answer');
+			}
+		}).catch(function (err) {
+			deferred.reject(err);
+		});
+		return deferred.promise();
+	};
+	changePw = function (data) {
+		var deferred = $.Deferred(),
+			db = stateMap.remote_db;
+		db.login('pwchanger', 'pwchanger').then(function () {
+			return db.changePassword(data.id, data.pw);
+		}).then(function () {
+			return db.logout();
+		}).then(function (doc) {
+			deferred.resolve(doc);
+			console.log(doc);
+		}).catch(function (err) {
+			console.log(err);
+			deferred.reject(err);
+		});
+		return deferred.promise();
+	};
+	setTodo = function (data) {
+		var deferred = $.Deferred();
+		stateMap.local_db.put(data).then(function (result) {
+			deferred.resolve(result);
+		}).catch(function (err) {
+			console.log(err);
+			deferred.reject(err);
+		});
+		return deferred.promise();
+	};
+	getTodo = function (start, end) {
+		var todo = [], i = 0, rows, len,
+			deferred = $.Deferred();
+		if (!start && !end) {
+			start = 0;
+			end = 1000000000000000000;
+		}
+		stateMap.local_db.query(function (doc, emit) {
+			if (doc.type === 'todo' && doc._id > start && doc._id < end) {
+				emit(doc);
+			}
+		}).then(function (todos) {
+			rows = todos.rows;
+			len = rows.length;
+			for (i; i < len; i++) {
+				todo.push(rows[i].key);
+			}
+			deferred.resolve(todo);
+		}).catch(function (err) {
+			deferred.reject(err);
+		});
+		return deferred.promise();
+	};
+	todoToggle = function (id, bool) {
+		stateMap.local_db.get(id).then(function (doc) {
+			doc.done = bool;
+			return stateMap.local_db.put(doc);
+		}).then(function (doc) {
+			console.log(doc);
+		}).catch(function (err) {
+			console.log(err);
+		});
+	};
+	setPlan = function (dataList) {
+		var deferred = $.Deferred();
+		stateMap.local_db.bulkDocs(dataList).then(function (result) {
+			deferred.resolve(result);
+		}).catch(function (err) {
+			console.log(err);
+			deferred.reject(err);
+			alert('error!');
+		});
+		return deferred.promise();
+	};
+	getPlan = function (start, end) {
+		var plan = [], i = 0, rows, len,
+			deferred = $.Deferred();
+		if (!start && !end) {
+			start = 0;
+			end = 10000000000000000000;
+		}
+		stateMap.local_db.query(function (doc, emit) {
+			if (doc.type === 'plan' && doc._id > start && doc._id < end) {
+				emit(doc);
+			}
+		}).then(function (plans) {
+			rows = plans.rows;
+			len = rows.length;
+			for (i; i < len; i++) {
+				console.log(rows[i]);
+				plan.push(rows[i].key);
+			}
+			deferred.resolve(plan);
+		}).catch(function (err) {
+			console.log('plan', err);
+			deferred.reject(err);
+		});
+		return deferred.promise();
+	};
+	setDday = function (data) {
+		var deferred = $.Deferred();
+		stateMap.local_db.put(data).then(function (result) {
+			deferred.resolve(result);
+		}).catch(function (err) {
+			deferred.reject(err);
+		});
+		return deferred.promise();
+	};
+	getDday = function (start, end) {
+		var
+			dday = [],
+			i = 0,
+			rows, len,
+			deferred = $.Deferred();
+		if (!start && !end) {
+			start = 0;
+			end = 10000000000000000000;
+		}
+		stateMap.local_db.query(function (doc, emit) {
+			if (doc.type === 'dday' && doc._id > start && doc._id < end) {
+				emit(doc);
+			}
+		}).then(function (ddays) {
+			rows = ddays.rows;
+			len = rows.length;
+			for (i; i < len; i++) {
+				console.log(rows[i]);
+				dday.push(rows[i].key);
+			}
+			deferred.resolve(dday);
+		}).catch(function (err) {
+			console.log('dday', err);
+			deferred.reject(err);
+		});
+		return deferred.promise();
+	};
+	deleteItem = function (id) {
+		var deferred = $.Deferred();
+		stateMap.local_db.get(id).then(function (doc) {
+			return stateMap.local_db.remove(doc);
+		}).then(function (result) {
+			deferred.resolve(result);
+		}).catch(function (err) {
+			deferred.reject(err);
+		});
+		return deferred.promise();
+	};
+	getInfo = function () {
+		return true;
+	};
+	sync = function (email) {
+		var
+			deferred = $.Deferred(),
+			local = stateMap.local_db,
+			opt = {live: true};
+		local.replicate.to(stateMap.dbhost + email, opt, function (err) {
+			console.log(err);
+		});
+		local.replicate.from(stateMap.dbhost + email, opt, function (err) {
+			console.log(err);
+		});
+		return deferred.promise();
+	};
+	upload = function (email) {
+		var
+			deferred = $.Deferred(),
+			local = stateMap.local_db;
+		local.replicate.to(stateMap.dbhost + email, function (err) {
+			if (err) {
+				console.log(err);
+				deferred.reject(err);
+			} else {
+				deferred.resolve();
+			}
+		});
+		return deferred.promise();
+	};
+	download = function (email) {
+		var
+			deferred = $.Deferred(),
+			local = stateMap.local_db;
+		local.replicate.from(stateMap.dbhost + email, function (err) {
+			if (err) {
+				console.log(err);
+				deferred.reject(err);
+			} else {
+				deferred.resolve();
+			}
+		});
+		return deferred.promise();
+	};
+	configModule = function (dbuser, dbhost) {
+		var options = {
+			auto_compaction: true
+		};
+		if (dbhost === null || dbhost === undefined) {
+			dbhost = 'http://zerohch0.iriscouch.com/';
+		}
+		if (dbuser) {
+			stateMap.remote_db = new PouchDB(dbhost + dbuser, options);
+		} else {
+			stateMap.remote_db = new PouchDB(dbhost + '/zerohch0', options);
+		}
+		stateMap.dbhost = dbhost;
+	};
+	initModule = function () {
+		var options = {
+			auto_compaction: true
+		};
+		configModule();
+		stateMap.local_db = new PouchDB('local', options);
+		return true;
+	};
+	return {
+		todoToggle  : todoToggle,
+		configModule: configModule,
+		initModule  : initModule,
+		login       : login,
+		logout      : logout,
+		setTodo     : setTodo,
+		getTodo     : getTodo,
+		setPlan     : setPlan,
+		getPlan     : getPlan,
+		getInfo     : getInfo,
+		setDday     : setDday,
+		getDday     : getDday,
+		sync        : sync,
+		join        : join,
+		checkId     : checkId,
+		upload      : upload,
+		download    : download,
+		findId      : findId,
+		changePw    : changePw,
+		checkAnswer : checkAnswer,
+		deleteItem  : deleteItem
+	};
 }());
