@@ -31,7 +31,7 @@ zp.model = (function () {
 			remote_db: null,
 			dbhost   : null
 		},
-		initModule, configModule, deleteItem, todoToggle,
+		initModule, configModule, deleteItem, deletePlans, updateItem,
 		setDday, getDday, sync, login, join, checkId, logout, findId, changePw,
 		setTodo, setPlan, getTodo, getPlan, getInfo, upload, download, checkAnswer;
 	// 로그인 로그아웃 관련 함수
@@ -153,10 +153,19 @@ zp.model = (function () {
 			end = 1000000000000000000;
 		}
 		stateMap.local_db.query(function (doc, emit) {
-			if (doc.type === 'todo' && doc._id > start && doc._id < end) {
-				emit(doc);
+			if (start === 'dateless') {
+				if (doc.type === 'todo' && doc.date === 'dateless') {
+					emit(doc);
+				}
+			} else {
+				if (doc.type === 'todo' && doc._id > start && doc._id < end) {
+					emit(doc);
+				}
 			}
 		}).then(function (todos) {
+			if (todos.total_rows === 0) {
+				deferred.reject('not_found');
+			}
 			rows = todos.rows;
 			len = rows.length;
 			for (i; i < len; i++) {
@@ -168,12 +177,17 @@ zp.model = (function () {
 		});
 		return deferred.promise();
 	};
-	todoToggle = function (id, bool) {
+	updateItem = function (id, data) {
 		stateMap.local_db.get(id).then(function (doc) {
-			doc.done = bool;
+			var prop;
+			for (prop in data) {
+				if (data.hasOwnProperty(prop)) {
+					doc[prop] = data[prop];
+				}
+			}
 			return stateMap.local_db.put(doc);
 		}).then(function (doc) {
-			console.log(doc);
+			console.log('업데이트 완료!', doc);
 		}).catch(function (err) {
 			console.log(err);
 		});
@@ -201,6 +215,9 @@ zp.model = (function () {
 				emit(doc);
 			}
 		}).then(function (plans) {
+			if (plans.total_rows === 0) {
+				deferred.reject('not_found');
+			}
 			rows = plans.rows;
 			len = rows.length;
 			for (i; i < len; i++) {
@@ -238,10 +255,12 @@ zp.model = (function () {
 				emit(doc);
 			}
 		}).then(function (ddays) {
+			if (ddays.total_rows === 0) {
+				deferred.reject('not_found');
+			}
 			rows = ddays.rows;
 			len = rows.length;
 			for (i; i < len; i++) {
-				console.log(rows[i]);
 				dday.push(rows[i].key);
 			}
 			deferred.resolve(dday);
@@ -254,8 +273,32 @@ zp.model = (function () {
 	deleteItem = function (id) {
 		var deferred = $.Deferred();
 		stateMap.local_db.get(id).then(function (doc) {
+			console.log(doc);
 			return stateMap.local_db.remove(doc);
 		}).then(function (result) {
+			deferred.resolve(result);
+		}).catch(function (err) {
+			deferred.reject(err);
+		});
+		return deferred.promise();
+	};
+	deletePlans = function (id) {
+		var deferred = $.Deferred();
+		stateMap.local_db.query(function (doc, emit) {
+			if (doc.type === 'plan' && doc.plan_idx === id) {
+				emit(doc);
+			}
+		}).then(function (doc) {
+			var docs = doc.rows.map(function (row) {
+				return {
+					_id: row.id,
+					_rev: row.rev,
+					_deleted: true
+				};
+			});
+			return stateMap.local_db.bulkDocs(docs);
+		}).then(function (result) {
+			console.log(result);
 			deferred.resolve(result);
 		}).catch(function (err) {
 			deferred.reject(err);
@@ -329,13 +372,13 @@ zp.model = (function () {
 		return true;
 	};
 	return {
-		todoToggle  : todoToggle,
 		configModule: configModule,
 		initModule  : initModule,
 		login       : login,
 		logout      : logout,
 		setTodo     : setTodo,
 		getTodo     : getTodo,
+		updateItem: updateItem,
 		setPlan     : setPlan,
 		getPlan     : getPlan,
 		getInfo     : getInfo,
@@ -349,7 +392,8 @@ zp.model = (function () {
 		findId      : findId,
 		changePw    : changePw,
 		checkAnswer : checkAnswer,
-		deleteItem  : deleteItem
+		deleteItem: deleteItem,
+		deletePlans: deletePlans
 	};
 }());
 /*
@@ -536,32 +580,7 @@ zp.calendar = (function () {
 	'use strict';
 	var
 		configMap = {
-			main_html: String()
-				+ '<table class="calendar-table">'
-					+ '<caption class="calendar-caption"></caption>'
-					+ '<thead>'
-						+ '<tr>'
-							+ '<th>주</th>'
-							+ '<th>일</th>'
-							+ '<th>월</th>'
-							+ '<th>화</th>'
-							+ '<th>수</th>'
-							+ '<th>목</th>'
-							+ '<th>금</th>'
-							+ '<th>토</th>'
-						+ '</tr>'
-					+ '</thead>'
-					+ '<tbody>'
-						+ '<tr><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
-						+ '<tr><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
-						+ '<tr><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
-						+ '<tr><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
-						+ '<tr><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
-						+ '<tr><th></th><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>'
-					+ '</tbody>'
-				+ '</table>'
-			,
-			day_list: ['일', '월', '화', '수', '목', '금', '토']
+			dayMap: ['일', '월', '화', '수', '목', '금', '토']
 		},
 		stateMap = {
 			$container: null
@@ -571,7 +590,6 @@ zp.calendar = (function () {
 		setCalendar, getWeekNum, daysInMonth, dayOfYear,
 		objectify, stringify, getWeekDay, lunarSolar,
 		getPrevDate, getNextDate, getNextString, getPrevString, dayOfWeek;
-
 	setJqueryMap = function ($container) {
 		var i = 0;
 		jqueryMap = {
@@ -583,65 +601,54 @@ zp.calendar = (function () {
 			jqueryMap['$tr' + i] = $container.find('tr:eq(' + i + ')');
 		}
 	};
-
 	initModule = function ($container, data) {
 		var
 			month = data.month,
 			year = data.year;
 		stateMap.$container = $container;
-
-		$container.html(configMap.main_html);
+		$container.html($('#zp-calendar').html());
 		setJqueryMap($container);
 		setCalendar(month, year);
 	};
-
-
 	setCalendar = function (month, year) {
-		month = parseInt(month, 10);
-		year = parseInt(year, 10);
 		var
 			date = new Date(),
-			date_idx = 1, j = 2,
-			first_day, last_date, i, num_week, $td,
+			dateIdx = 1, j = 2,
+			firstDay, lastDate, i, weekNum, $td,
 			today = new Date();
-
+		year = parseInt(year, 10);
+		month = parseInt(month, 10);
 		// 날짜를 1일로 맞춘다
 		date.setYear(year);
 		date.setMonth(month - 1);
 		date.setDate(1);
-		first_day = date.getDay();
-
+		firstDay = date.getDay();
 		// 날짜를 마지막 날짜로 맞춘다
 		date.setMonth(month);
 		date.setDate(date.getDate() - 1);
-		last_date = date.getDate();
-
+		lastDate = date.getDate();
 		jqueryMap.$caption.html(month + '월');
-		num_week = getWeekNum(date_idx, month, year);
-
-		for (i = first_day; i < 7; i++) {
-			jqueryMap.$tr1.find('th').html(num_week + '주');
-			jqueryMap.$tr1.find('td').eq(i).append('<div>' + date_idx + '</div>');
-			date_idx++;
+		weekNum = getWeekNum(dateIdx, month, year);
+		for (i = firstDay; i < 7; i++) {
+			jqueryMap.$tr1.find('th').html(weekNum + '주');
+			jqueryMap.$tr1.find('td').eq(i).append('<div>' + dateIdx + '</div>');
+			dateIdx++;
 		}
-		num_week++;
-
-		while (date_idx <= last_date - 7) {
+		weekNum++;
+		while (dateIdx <= lastDate - 7) {
 			for (i = 0; i < 7; i++) {
-				jqueryMap['$tr' + String(j)].find('th').html(num_week + '주');
-				jqueryMap['$tr' + String(j)].find('td').eq(i).append('<div>' + date_idx + '</div>');
-				date_idx++;
+				jqueryMap['$tr' + String(j)].find('th').html(weekNum + '주');
+				jqueryMap['$tr' + String(j)].find('td').eq(i).append('<div>' + dateIdx + '</div>');
+				dateIdx++;
 			}
 			j++;
-			num_week++;
+			weekNum++;
 		}
-
-		for (i = 0; date_idx <= last_date; i++) {
-			jqueryMap['$tr' + String(j)].find('th').html(num_week + '주');
-			jqueryMap['$tr' + String(j)].find('td').eq(i).append('<div>' + date_idx + '</div>');
-			date_idx++;
+		for (i = 0; dateIdx <= lastDate; i++) {
+			jqueryMap['$tr' + String(j)].find('th').html(weekNum + '주');
+			jqueryMap['$tr' + String(j)].find('td').eq(i).append('<div>' + dateIdx + '</div>');
+			dateIdx++;
 		}
-
 		// 날짜가 없는 줄 제거
 		switch (j) {
 			case 4:
@@ -657,7 +664,7 @@ zp.calendar = (function () {
 		// 오늘 날짜 표시
 		if ((year === today.getFullYear()) && (month === today.getMonth() + 1)) {
 			$td = jqueryMap.$table.find('td');
-			$td.each(function() {
+			$td.each(function () {
 				if (parseInt($(this).find('div').eq(0).html(), 10) === today.getDate()) {
 					$(this).addClass('td-today');
 				}
@@ -665,16 +672,14 @@ zp.calendar = (function () {
 		}
 		setHoliday(month, year);
 	};
-
 	setHoliday = function (month, year) {
 		var $td = jqueryMap.$table.find('td'),
 			newYear = lunarSolar(year + '0101', 'ltos'),
 			buddha = lunarSolar(year + '0408', 'ltos'),
 			thanksGiving = lunarSolar(year + '0815', 'ltos'),
 			today;
-
 		if (month === newYear.month) { // 설
-			$td.each(function() {
+			$td.each(function () {
 				today = parseInt($(this).text(), 10);
 				if (
 					today === newYear.day ||
@@ -686,7 +691,7 @@ zp.calendar = (function () {
 			});
 		}
 		else if (month === buddha.month) { // 석가탄신일
-			$td.each(function() {
+			$td.each(function () {
 				today = parseInt($(this).text(), 10);
 				if (today === buddha.day) {
 					$(this).css('color', 'red');
@@ -694,7 +699,7 @@ zp.calendar = (function () {
 			});
 		}
 		else if (month === thanksGiving.month) { // 추석
-			$td.each(function() {
+			$td.each(function () {
 				today = parseInt($(this).text(), 10);
 				if (
 					today === thanksGiving.day ||
@@ -707,49 +712,49 @@ zp.calendar = (function () {
 		}
 		switch (month) {
 			case 1:
-				$td.each(function() {
+				$td.each(function () {
 					if (parseInt($(this).text(), 10) === 1) {
 						$(this).css('color', 'red');
 					}
 				});
 				break;
 			case 3:
-				$td.each(function() {
+				$td.each(function () {
 					if (parseInt($(this).text(), 10) === 1) {
 						$(this).css('color', 'red');
 					}
 				});
 				break;
 			case 5:
-				$td.each(function() {
+				$td.each(function () {
 					if (parseInt($(this).text(), 10) === 5) {
 						$(this).css('color', 'red');
 					}
 				});
 				break;
 			case 6:
-				$td.each(function() {
+				$td.each(function () {
 					if (parseInt($(this).text(), 10) === 6) {
 						$(this).css('color', 'red');
 					}
 				});
 				break;
 			case 8:
-				$td.each(function() {
+				$td.each(function () {
 					if (parseInt($(this).text(), 10) === 15) {
 						$(this).css('color', 'red');
 					}
 				});
 				break;
 			case 10:
-				$td.each(function() {
+				$td.each(function () {
 					if (parseInt($(this).text(), 10) === 3 || parseInt($(this).text(), 10) === 9) {
 						$(this).css('color', 'red');
 					}
 				});
 				break;
 			case 12:
-				$td.each(function() {
+				$td.each(function () {
 					if (parseInt($(this).text(), 10) === 25) {
 						$(this).css('color', 'red');
 					}
@@ -760,7 +765,6 @@ zp.calendar = (function () {
 		}
 		return true;
 	};
-
 	// 공통 calendar 함수 모음
 	lunarSolar = function (input_day, direction) {
 		if (direction !== 'ltos' && direction !== 'stol') {
@@ -771,7 +775,7 @@ zp.calendar = (function () {
 		// (윤달이 있는 달 - 평달이 크고 윤달이 작으면 :5,  평달과 윤달이 모두 크면 : 6)
 		var
 			kk = [
-				[1, 2, 4, 1, 1, 2, 1, 2, 1, 2, 2, 1],   /* 1841 */
+				[1, 2, 4, 1, 1, 2, 1, 2, 1, 2, 2, 1], /* 1841 */
 				[2, 2, 1, 2, 1, 1, 2, 1, 2, 1, 2, 1],
 				[2, 2, 2, 1, 2, 1, 4, 1, 2, 1, 2, 1],
 				[2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2],
@@ -781,7 +785,7 @@ zp.calendar = (function () {
 				[1, 2, 1, 1, 2, 1, 2, 1, 2, 2, 2, 1],
 				[2, 1, 2, 3, 2, 1, 2, 1, 2, 1, 2, 2],
 				[2, 1, 2, 1, 1, 2, 1, 1, 2, 2, 1, 2],
-				[2, 2, 1, 2, 1, 1, 2, 1, 2, 1, 5, 2],   /* 1851 */
+				[2, 2, 1, 2, 1, 1, 2, 1, 2, 1, 5, 2], /* 1851 */
 				[2, 1, 2, 2, 1, 1, 2, 1, 2, 1, 1, 2],
 				[2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2],
 				[1, 2, 1, 2, 1, 2, 5, 2, 1, 2, 1, 2],
@@ -791,7 +795,7 @@ zp.calendar = (function () {
 				[1, 2, 1, 1, 2, 1, 1, 2, 2, 1, 2, 2],
 				[2, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 2],
 				[2, 1, 6, 1, 1, 2, 1, 1, 2, 1, 2, 2],
-				[1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 1, 2],   /* 1861 */
+				[1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 1, 2], /* 1861 */
 				[2, 1, 2, 1, 2, 2, 1, 2, 2, 3, 1, 2],
 				[1, 2, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2],
 				[1, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2, 1],
@@ -801,7 +805,7 @@ zp.calendar = (function () {
 				[1, 2, 2, 3, 2, 1, 1, 2, 1, 2, 2, 1],
 				[2, 2, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1],
 				[2, 2, 2, 1, 2, 1, 2, 1, 1, 5, 2, 1],
-				[2, 2, 1, 2, 2, 1, 2, 1, 2, 1, 1, 2],   /* 1871 */
+				[2, 2, 1, 2, 2, 1, 2, 1, 2, 1, 1, 2], /* 1871 */
 				[1, 2, 1, 2, 2, 1, 2, 1, 2, 2, 1, 2],
 				[1, 1, 2, 1, 2, 4, 2, 1, 2, 2, 1, 2],
 				[1, 1, 2, 1, 2, 1, 2, 1, 2, 2, 2, 1],
@@ -811,7 +815,7 @@ zp.calendar = (function () {
 				[2, 2, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1],
 				[2, 2, 4, 2, 1, 2, 1, 1, 2, 1, 2, 1],
 				[2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 1, 2],
-				[1, 2, 1, 2, 1, 2, 5, 2, 2, 1, 2, 1],   /* 1881 */
+				[1, 2, 1, 2, 1, 2, 5, 2, 2, 1, 2, 1], /* 1881 */
 				[1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2],
 				[1, 1, 2, 1, 1, 2, 1, 2, 2, 2, 1, 2],
 				[2, 1, 1, 2, 3, 2, 1, 2, 2, 1, 2, 2],
@@ -821,7 +825,7 @@ zp.calendar = (function () {
 				[2, 1, 2, 2, 1, 2, 1, 1, 2, 1, 2, 1],
 				[2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2],
 				[1, 5, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2],
-				[1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2],   /* 1891 */
+				[1, 2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2], /* 1891 */
 				[1, 1, 2, 1, 1, 5, 2, 2, 1, 2, 2, 2],
 				[1, 1, 2, 1, 1, 2, 1, 2, 1, 2, 2, 2],
 				[1, 2, 1, 2, 1, 1, 2, 1, 2, 1, 2, 2],
@@ -831,7 +835,7 @@ zp.calendar = (function () {
 				[2, 1, 5, 2, 2, 1, 2, 1, 2, 1, 2, 1],
 				[2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2],
 				[1, 2, 1, 1, 2, 1, 2, 5, 2, 2, 1, 2],
-				[1, 2, 1, 1, 2, 1, 2, 1, 2, 2, 2, 1],   /* 1901 */
+				[1, 2, 1, 1, 2, 1, 2, 1, 2, 2, 2, 1], /* 1901 */
 				[2, 1, 2, 1, 1, 2, 1, 2, 1, 2, 2, 2],
 				[1, 2, 1, 2, 3, 2, 1, 1, 2, 2, 1, 2],
 				[2, 2, 1, 2, 1, 1, 2, 1, 1, 2, 2, 1],
@@ -841,7 +845,7 @@ zp.calendar = (function () {
 				[2, 1, 1, 2, 2, 1, 2, 1, 2, 2, 1, 2],
 				[1, 5, 1, 2, 1, 2, 1, 2, 2, 2, 1, 2],
 				[1, 2, 1, 1, 2, 1, 2, 1, 2, 2, 2, 1],
-				[2, 1, 2, 1, 1, 5, 1, 2, 2, 1, 2, 2],   /* 1911 */
+				[2, 1, 2, 1, 1, 5, 1, 2, 2, 1, 2, 2], /* 1911 */
 				[2, 1, 2, 1, 1, 2, 1, 1, 2, 2, 1, 2],
 				[2, 2, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2],
 				[2, 2, 1, 2, 5, 1, 2, 1, 2, 1, 1, 2],
@@ -851,7 +855,7 @@ zp.calendar = (function () {
 				[2, 1, 1, 2, 1, 2, 1, 2, 2, 2, 1, 2],
 				[1, 2, 1, 1, 2, 1, 5, 2, 2, 1, 2, 2],
 				[1, 2, 1, 1, 2, 1, 1, 2, 2, 1, 2, 2],
-				[2, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 2],   /* 1921 */
+				[2, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 2], /* 1921 */
 				[2, 1, 2, 2, 3, 2, 1, 1, 2, 1, 2, 2],
 				[1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 1, 2],
 				[2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 1],
@@ -861,7 +865,7 @@ zp.calendar = (function () {
 				[1, 5, 1, 2, 1, 1, 2, 2, 1, 2, 2, 2],
 				[1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 2, 2],
 				[1, 2, 2, 1, 1, 5, 1, 2, 1, 2, 2, 1],
-				[2, 2, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1],   /* 1931 */
+				[2, 2, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1], /* 1931 */
 				[2, 2, 2, 1, 2, 1, 2, 1, 1, 2, 1, 2],
 				[1, 2, 2, 1, 6, 1, 2, 1, 2, 1, 1, 2],
 				[1, 2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2],
@@ -871,7 +875,7 @@ zp.calendar = (function () {
 				[2, 2, 1, 1, 2, 1, 4, 1, 2, 2, 1, 2],
 				[2, 2, 1, 1, 2, 1, 1, 2, 1, 2, 1, 2],
 				[2, 2, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1],
-				[2, 2, 1, 2, 2, 4, 1, 1, 2, 1, 2, 1],   /* 1941 */
+				[2, 2, 1, 2, 2, 4, 1, 1, 2, 1, 2, 1], /* 1941 */
 				[2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 1, 2],
 				[1, 2, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2],
 				[1, 1, 2, 4, 1, 2, 1, 2, 2, 1, 2, 2],
@@ -881,7 +885,7 @@ zp.calendar = (function () {
 				[2, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1, 2],
 				[2, 2, 1, 2, 1, 2, 3, 2, 1, 2, 1, 2],
 				[2, 1, 2, 2, 1, 2, 1, 1, 2, 1, 2, 1],
-				[2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2],   /* 1951 */
+				[2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2], /* 1951 */
 				[1, 2, 1, 2, 4, 2, 1, 2, 1, 2, 1, 2],
 				[1, 2, 1, 1, 2, 2, 1, 2, 2, 1, 2, 2],
 				[1, 1, 2, 1, 1, 2, 1, 2, 2, 1, 2, 2],
@@ -891,7 +895,7 @@ zp.calendar = (function () {
 				[1, 2, 2, 1, 2, 1, 1, 2, 1, 2, 1, 2],
 				[1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1],
 				[2, 1, 2, 1, 2, 5, 2, 1, 2, 1, 2, 1],
-				[2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2],   /* 1961 */
+				[2, 1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2], /* 1961 */
 				[1, 2, 1, 1, 2, 1, 2, 2, 1, 2, 2, 1],
 				[2, 1, 2, 3, 2, 1, 2, 1, 2, 2, 2, 1],
 				[2, 1, 2, 1, 1, 2, 1, 2, 1, 2, 2, 2],
@@ -901,7 +905,7 @@ zp.calendar = (function () {
 				[1, 2, 2, 1, 2, 1, 5, 2, 1, 2, 1, 2],
 				[1, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1],
 				[2, 1, 1, 2, 2, 1, 2, 1, 2, 2, 1, 2],
-				[1, 2, 1, 1, 5, 2, 1, 2, 2, 2, 1, 2],   /* 1971 */
+				[1, 2, 1, 1, 5, 2, 1, 2, 2, 2, 1, 2], /* 1971 */
 				[1, 2, 1, 1, 2, 1, 2, 1, 2, 2, 2, 1],
 				[2, 1, 2, 1, 1, 2, 1, 1, 2, 2, 2, 1],
 				[2, 2, 1, 5, 1, 2, 1, 1, 2, 2, 1, 2],
@@ -911,7 +915,7 @@ zp.calendar = (function () {
 				[2, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1],
 				[2, 1, 1, 2, 1, 6, 1, 2, 2, 1, 2, 1],
 				[2, 1, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2],
-				[1, 2, 1, 1, 2, 1, 1, 2, 2, 1, 2, 2],   /* 1981 */
+				[1, 2, 1, 1, 2, 1, 1, 2, 2, 1, 2, 2], /* 1981 */
 				[2, 1, 2, 3, 2, 1, 1, 2, 2, 1, 2, 2],
 				[2, 1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 2],
 				[2, 1, 2, 2, 1, 1, 2, 1, 1, 5, 2, 2],
@@ -921,7 +925,7 @@ zp.calendar = (function () {
 				[1, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2, 1],
 				[2, 1, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2],
 				[1, 2, 1, 1, 5, 1, 2, 1, 2, 2, 2, 2],
-				[1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 2, 2],   /* 1991 */
+				[1, 2, 1, 1, 2, 1, 1, 2, 1, 2, 2, 2], /* 1991 */
 				[1, 2, 2, 1, 1, 2, 1, 1, 2, 1, 2, 2],
 				[1, 2, 5, 2, 1, 2, 1, 1, 2, 1, 2, 1],
 				[2, 2, 2, 1, 2, 1, 2, 1, 1, 2, 1, 2],
@@ -931,7 +935,7 @@ zp.calendar = (function () {
 				[2, 1, 1, 2, 3, 2, 2, 1, 2, 2, 2, 1],
 				[2, 1, 1, 2, 1, 1, 2, 1, 2, 2, 2, 1],
 				[2, 2, 1, 1, 2, 1, 1, 2, 1, 2, 2, 1],
-				[2, 2, 2, 3, 2, 1, 1, 2, 1, 2, 1, 2],   /* 2001 */
+				[2, 2, 2, 3, 2, 1, 1, 2, 1, 2, 1, 2], /* 2001 */
 				[2, 2, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1],
 				[2, 2, 1, 2, 2, 1, 2, 1, 1, 2, 1, 2],
 				[1, 5, 2, 2, 1, 2, 1, 2, 2, 1, 1, 2],
@@ -941,7 +945,7 @@ zp.calendar = (function () {
 				[2, 1, 1, 2, 1, 1, 2, 1, 2, 2, 1, 2],
 				[2, 2, 1, 1, 5, 1, 2, 1, 2, 1, 2, 2],
 				[2, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1, 2],
-				[2, 1, 2, 2, 1, 2, 1, 1, 2, 1, 2, 1],   /* 2011 */
+				[2, 1, 2, 2, 1, 2, 1, 1, 2, 1, 2, 1], /* 2011 */
 				[2, 1, 6, 2, 1, 2, 1, 1, 2, 1, 2, 1],
 				[2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2],
 				[1, 2, 1, 2, 1, 2, 1, 2, 5, 2, 1, 2],
@@ -951,7 +955,7 @@ zp.calendar = (function () {
 				[1, 2, 1, 2, 1, 1, 2, 1, 2, 1, 2, 2],
 				[2, 1, 2, 1, 2, 1, 1, 2, 1, 2, 1, 2],
 				[2, 1, 2, 5, 2, 1, 1, 2, 1, 2, 1, 2],
-				[1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1],   /* 2021 */
+				[1, 2, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1], /* 2021 */
 				[2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2],
 				[1, 5, 2, 1, 2, 1, 2, 2, 1, 2, 1, 2],
 				[1, 2, 1, 1, 2, 1, 2, 2, 1, 2, 2, 1],
@@ -961,7 +965,7 @@ zp.calendar = (function () {
 				[1, 2, 2, 1, 5, 1, 2, 1, 1, 2, 2, 1],
 				[2, 2, 1, 2, 2, 1, 1, 2, 1, 1, 2, 2],
 				[1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2, 1],
-				[2, 1, 5, 2, 1, 2, 2, 1, 2, 1, 2, 1],   /* 2031 */
+				[2, 1, 5, 2, 1, 2, 2, 1, 2, 1, 2, 1], /* 2031 */
 				[2, 1, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2],
 				[1, 2, 1, 1, 2, 1, 5, 2, 2, 2, 1, 2],
 				[1, 2, 1, 1, 2, 1, 2, 1, 2, 2, 2, 1],
@@ -971,59 +975,59 @@ zp.calendar = (function () {
 				[2, 2, 1, 2, 1, 2, 1, 2, 1, 1, 2, 1],
 				[2, 2, 1, 2, 5, 2, 1, 2, 1, 2, 1, 1],
 				[2, 1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 1],
-				[2, 1, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2],   /* 2041 */
+				[2, 1, 1, 2, 1, 2, 2, 1, 2, 2, 1, 2], /* 2041 */
 				[1, 5, 1, 2, 1, 2, 1, 2, 2, 2, 1, 2],
 				[1, 2, 1, 1, 2, 1, 1, 2, 2, 1, 2, 2]
 			],
-			md = [31,0,31,30,31,30,31,31,30,31,30,31],
-			year = input_day.substring(0,4),
-			month = input_day.substring(4,6),
-			day = input_day.substring(6,8),
+			md = [31, 0, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
+			year = input_day.substring(0, 4),
+			month = input_day.substring(4, 6),
+			day = input_day.substring(6, 8),
 			lyear, lmonth, lday, leapyes, syear, smonth, sday,
 			mm, y1, y2, m1, m2, i, j, td, ly, lm, ld, sy, sy1, sm, sd, td1, td2,
 			dt = [203];
-		if ( direction === 'stol') { // 양력을 음력으로 변환
+		if (direction === 'stol') { // 양력을 음력으로 변환
 			// 기준일자 양력 1841 년 1 월 23 일 (음력 1840 년 1 월 1 일) 계산
 			td1 = (1840 * 365) + (1840 / 4) - (1840 / 100) + (1840 / 400) + 23;
 			sy = year;          // 년도 check
 			sm = month;         // 월 check
 			md[1] = daysInMonth(2, sy);           // 윤년 check
-			sd = day || md[sm-1];    // 일수 check
+			sd = day || md[sm - 1];    // 일수 check
 			sy1 = sy - 1;
 			td2 = sy1 * 365 + sy1 / 4 - sy1 / 100 + sy1 / 400 + parseInt(sd, 10);
 			for (i = 0; i < sm - 1; i++) {
 				td2 = td2 + md[i];
 			}
-			td =  td2 - td1 + 1;
+			td = td2 - td1 + 1;
 			for (i = 0; i <= sy - 1841; i++) {
-			   	dt[i] =0;
-				for(j = 0; j < 12; j++) {
-					switch(kk[i][j]) {
-					    case 1 :
-						    mm=29;
-						    break;
-					    case 2 :
-						    mm=30;
-						    break;
-					    case 3 :
-						    mm=58;     // 29+29
+				dt[i] = 0;
+				for (j = 0; j < 12; j++) {
+					switch (kk[i][j]) {
+						case 1 :
+							mm = 29;
 							break;
-					    case 4 :
-							mm=59;     // 29+30
+						case 2 :
+							mm = 30;
 							break;
-					    case 5 :
-						    mm=59;     // 30+29
-						    break;
+						case 3 :
+							mm = 58;     // 29+29
+							break;
+						case 4 :
+							mm = 59;     // 29+30
+							break;
+						case 5 :
+							mm = 59;     // 30+29
+							break;
 						case 6 :
-						    mm=60;     // 30+30
-						    break;
+							mm = 60;     // 30+30
+							break;
 					}
 					dt[i] = dt[i] + mm;
 				}
 			}
-			ly =0 ;
+			ly = 0;
 			while (true) {
-				if (td > dt[ly] ) {
+				if (td > dt[ly]) {
 					td = td - dt[ly];
 					ly = ly + 1;
 				}
@@ -1031,13 +1035,13 @@ zp.calendar = (function () {
 					break;
 				}
 			}
-			lm=0;
+			lm = 0;
 			while (true) {
 				if (kk[ly][lm] <= 2) {
-					mm = kk[ly][lm] +28;
+					mm = kk[ly][lm] + 28;
 					if (td > mm) {
 						td = td - mm;
-						lm = lm +1;
+						lm = lm + 1;
 					}
 					else {
 						break;
@@ -1073,28 +1077,27 @@ zp.calendar = (function () {
 						}
 					}
 					else {
-					    break;
+						break;
 					}
 				}
 			}
 			ly = ly + 1841;
 			lm = lm + 1;
 			ld = td;
-
 			return {
 				year: ly,
 				month: lm,
 				day: ld
 			};
 		}
-		if ( direction === 'ltos' ) {
+		if (direction === 'ltos') {
 			// 음력에서 양력으로 변환
 			lyear = year;        // 년도 check
 			lmonth = month;     // 월 check
 			y1 = lyear - 1841;
 			m1 = lmonth - 1;
 			leapyes = 0;
-			if (kk[y1][m1] > 2)  {
+			if (kk[y1][m1] > 2) {
 				switch (kk[y1][m1]) {
 					case 1:
 					case 3:
@@ -1108,35 +1111,33 @@ zp.calendar = (function () {
 						break;
 				}
 			}
-
 			lday = day;
-
 			td = 0;
 			for (i = 0; i < y1; i++) {
 				for (j = 0; j < 12; j++) {
 					switch (kk[i][j]) {
-					   	case 1:
+						case 1:
 							td = td + 29;
 							break;
-					   	case 2:
+						case 2:
 							td = td + 30;
 							break;
-					   	case 3:
+						case 3:
 							td = td + 58;    // 29+29
 							break;
-					  	case 4:
+						case 4:
 							td = td + 59;    // 29+30
 							break;
-					   	case 5:
+						case 5:
 							td = td + 59;    // 30+29
 							break;
-					   	case 6:
+						case 6:
 							td = td + 60;    // 30+30
 							break;
-				   	}
+					}
 				}
 			}
-			for (j=0; j < m1; j++) {
+			for (j = 0; j < m1; j++) {
 				switch (kk[y1][j]) {
 					case 1:
 						td = td + 29;
@@ -1159,7 +1160,7 @@ zp.calendar = (function () {
 				}
 			}
 			if (leapyes === 1) {
-				switch(kk[y1][m1]) {
+				switch (kk[y1][m1]) {
 					case 3:
 					case 4:
 						td = td + 29;
@@ -1170,12 +1171,12 @@ zp.calendar = (function () {
 						break;
 				}
 			}
-			td =  td + parseFloat(lday) + 22;
+			td = td + parseFloat(lday) + 22;
 			// td : 1841 년 1 월 1 일 부터 원하는 날짜까지의 전체 날수의 합
 			y1 = 1840;
 			while (true) {
-				y1 = y1 +1;
-				if  ((y1 % 400 === 0) || ((y1 % 100 !== 0) && (y1 % 4 === 0))) {
+				y1 = y1 + 1;
+				if ((y1 % 400 === 0) || ((y1 % 100 !== 0) && (y1 % 4 === 0))) {
 					y2 = 366;
 				}
 				else {
@@ -1184,21 +1185,20 @@ zp.calendar = (function () {
 				if (td <= y2) {
 					break;
 				}
-				td = td- y2;
+				td = td - y2;
 			}
 			syear = y1;
-			md[1] = parseInt(y2, 10) -337;
+			md[1] = parseInt(y2, 10) - 337;
 			m1 = 0;
 			while (true) {
-				m1= m1 + 1;
-				if (td <= md[m1-1]) {
+				m1 = m1 + 1;
+				if (td <= md[m1 - 1]) {
 					break;
 				}
-				td = td - md[m1-1];
+				td = td - md[m1 - 1];
 			}
 			smonth = parseInt(m1, 10);
 			sday = parseInt(td, 10);
-
 			return {
 				year: syear,
 				month: smonth,
@@ -1206,11 +1206,10 @@ zp.calendar = (function () {
 			};
 		}
 	};
-
 	getNextDate = function (data, interval) {
 		var date, obj;
 		if (!interval) {interval = 1;}
-		date = new Date(data.year, data.month - 1, parseInt(data.date,10) + interval);
+		date = new Date(data.year, data.month - 1, parseInt(data.date, 10) + interval);
 		obj = {
 			date: date.getDate(),
 			month: date.getMonth() + 1,
@@ -1233,19 +1232,16 @@ zp.calendar = (function () {
 		obj.day = new Date(obj.year, obj.month - 1, obj.date).getDay();
 		return obj;
 	};
-
 	getPrevString = function (str, interval) {
 		if (!interval) {interval = 1;}
 		var obj = getPrevDate(str, interval);
 		return stringify(obj);
 	};
-
 	getNextString = function (str, interval) {
 		if (!interval) {interval = 1;}
 		var obj = getNextDate(str, interval);
 		return stringify(obj);
 	};
-
 	stringify = function (data, delimiter) {
 		var string = '',
 			date = data.date,
@@ -1262,26 +1258,27 @@ zp.calendar = (function () {
 			string = string + delimiter + month;
 		}
 		if (date) {
-			if (date < 10 ) {string += 0;}
-			string = string + delimiter +date;
+			if (date < 10) {
+				string += 0;
+			}
+			string = string + delimiter + date;
 		}
 		return string;
 	};
-
 	objectify = function (str) {
+		var obj, year, month, date;
 		if (typeof str !== 'string') {
 			console.warn('인자는 문자열이어야 합니다.');
 			return false;
 		}
-		var obj, year, month, date;
 		if (str.length === 8) {
 			year = str.substr(0, 4);
 			month = str.substr(4, 2);
 			date = str.substr(6, 2);
 		} else if (str.length === 10) {
-			year = str.substr(0,4);
-			month = str.substr(5,2);
-			date = str.substr(8,2);
+			year = str.substr(0, 4);
+			month = str.substr(5, 2);
+			date = str.substr(8, 2);
 		}
 		obj = {
 			year: parseInt(year, 10),
@@ -1291,18 +1288,16 @@ zp.calendar = (function () {
 		};
 		return obj;
 	};
-
 	dayOfWeek = function (date, month, year) {
 		if (!year) {year = new Date().getFullYear();}
 		var day = new Date(year, month - 1, date).getDay();
-		return configMap.day_list[day];
+		return configMap.dayMap[day];
 	};
-
 	dayOfYear = function (date, month, year) {
 		var
 			daysList = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
 			i = 0,
-            total = 0;
+			total = 0;
 		if (!year) {year = new Date().getFullYear();}
 		if (daysInMonth(2, year) === 29) {daysList[1] = 29;}
 		// 인자로 년월일을 입력했을 경우
@@ -1328,24 +1323,22 @@ zp.calendar = (function () {
 			year: year
 		};
 	};
-
 	daysInMonth = function (month, year) {
 		if (!year) {
 			year = new Date().getFullYear();
 		}
 		return new Date(year, month, 0).getDate();
 	};
-
 	// 해당주의 날짜들을 배열로 돌려주는 함수
 	getWeekDay = function (week, year) {
 		var
 			i = 0,
-			firstDay = new Date(year, 0, 1).getDay(),
 			list = [],
-			days, result;
+			firstDay, days, result;
 		if (!year) {
 			year = new Date().getFullYear();
 		}
+		firstDay = new Date(year, 0, 1).getDay();
 		days = week * 7 - firstDay - 6;
 		for (i; i < 7; i++) {
 			result = dayOfYear(days);
@@ -1357,7 +1350,6 @@ zp.calendar = (function () {
 		}
 		return list;
 	};
-
 	// 해당일이 그 해의 몇 번째 주인지 찾는 함수
 	// 인자: date, month[, year] 또는 dateString
 	getWeekNum = function (date, month, year) {
@@ -1371,14 +1363,12 @@ zp.calendar = (function () {
 		}
 		total = dayOfYear(date, month, year) + firstDay + offset;
 		weekNum = Math.floor(total / 7);
-
 		// 각 달의 1일이 금, 토면 그 주는 전달 마지막 주로 친다.
 		if (firstDay > 4) {
 			weekNum -= 1;
 		}
 		return weekNum;
 	};
-
 	return {
 		initModule: initModule,
 		getWeekNum: getWeekNum,
@@ -1414,39 +1404,40 @@ zp.shell = (function () {
 		configMap = {
 			anchor_schema_map: {
 				current: {
-					year : true,
+					year: true,
 					month: true,
-					week : true,
-					day  : true,
-					plan : true,
-					todo : true,
-					dday : true
+					week: true,
+					day: true,
+					plan: true,
+					todo: true,
+					dday: true
 				},
-				date   : true
+				date: true
 			},
-			today            : {
-				year : new Date().getFullYear(),
+			today: {
+				year: new Date().getFullYear(),
 				month: new Date().getMonth() + 1,
-				date : new Date().getDate(),
-				week : zp.calendar.getWeekNum(new Date().getDate(), new Date().getMonth() + 1),
-				day  : new Date().getDay()
+				date: new Date().getDate(),
+				week: zp.calendar.getWeekNum(new Date().getDate(), new Date().getMonth() + 1),
+				day: new Date().getDay()
 			},
-			day              : ['일', '월', '화', '수', '목', '금', '토']
+			day: ['일', '월', '화', '수', '목', '금', '토']
 		},
 		stateMap = {
 			$container: null,
 			anchor_map: {},
-			current   : 'day',
-			act       : 'reload',
-			date_info : {
-				year : configMap.today.year,
+			current: 'day',
+			act: 'reload',
+			date_info: {
+				year: configMap.today.year,
 				month: configMap.today.month,
-				date : configMap.today.date,
-				week : configMap.today.week,
-				day  : configMap.today.day
+				date: configMap.today.date,
+				week: configMap.today.week,
+				day: configMap.today.day
 			},
-			state     : 'static',
-			fidx      : 0
+			state: 'static',
+			fidx: 0,
+			container_height: 960
 		},
 		jqueryMap = {},
 	// menu function
@@ -1460,30 +1451,32 @@ zp.shell = (function () {
 	// content function
 		initModule, setJqueryMap, initMain, initDay, initWeek, initMonth, initYear, toggleMain,
 	// swipe function
-		onSwipe, initPosition, setPosition, getDirection, onTouchend, onTouchmove, onTouchstart;
+		onSwipe, initPosition, setPosition, getDirection, onTouchend, onTouchmove, onTouchstart,
+	// misc
+		onError, adjustHeight;
 	setJqueryMap = function ($container) {
 		jqueryMap = {
 			$container: $container,
-			$header   : $container.find('header'),
-			$user     : $container.find('.user'),
-			$avatar   : $container.find('.avatar'),
-			$info     : $container.find('.info'),
-			$name     : $container.find('.name'),
-			$menu     : $container.find('.menu'),
-			$logout   : $container.find('#menu-logout'),
-			$profile  : $container.find('#menu-profile'),
-			$upload   : $container.find('#menu-upload'),
-			$download : $container.find('#menu-download'),
-			$option   : $container.find('#menu-option'),
-			$report   : $container.find('#menu-report'),
-			$main     : $container.find('main'),
-			$flickView: $container.find('.flick-view'),
-			$flickCon : $container.find('.flick-con'),
-			$flick    : $container.find('.flick-panel'),
-			$toggle   : $container.find('.tool-toggle'),
-			$search   : $container.find('.tool-search'),
-			$modal    : $container.find('.modal'),
-			$intro    : $container.find('.intro')
+			$header: $container.find('header'),
+			$user: $container.find('.user'),
+			$avatar: $container.find('.avatar'),
+			$info: $container.find('.info'),
+			$name: $container.find('.name'),
+			$menu: $container.find('.menu'),
+			$logout: $container.find('#menu-logout'),
+			$profile: $container.find('#menu-profile'),
+			$upload: $container.find('#menu-upload'),
+			$download: $container.find('#menu-download'),
+			$option: $container.find('#menu-option'),
+			$report: $container.find('#menu-report'),
+			$main: $container.find('main'),
+			$flickView: $container.find('#flick-view'),
+			$flickCon: $container.find('#flick-con'),
+			$flickPanel: $container.find('.flick-panel'),
+			$toggle: $container.find('.tool-toggle'),
+			$search: $container.find('.tool-search'),
+			$modal: $container.find('.modal'),
+			$intro: $container.find('.intro')
 		};
 	};
 	initDay = function (e, data) {
@@ -1534,100 +1527,109 @@ zp.shell = (function () {
 		var tempData = {};
 		console.log('현재 mod: ' + mod);
 		data.week = data.week || zp.calendar.getWeekNum(data.date, data.month, data.year);
-		zp[mod].initModule(jqueryMap.$flick.eq(0), data);
-		if (mod === 'day') {
-			tempData = zp.calendar.getNextDate(data);
-			zp.day.initModule(jqueryMap.$flick.eq(1), tempData);
-			tempData = zp.calendar.getPrevDate(data);
-			zp.day.initModule(jqueryMap.$flick.eq(2), tempData);
-		} else if (mod === 'week') {
-			tempData.week = data.week + 1;
-			tempData.year = data.year;
-			if (tempData.week === 54) {
-				tempData.week = 1;
-				tempData.year += 1;
-			}
-			zp.week.initModule(jqueryMap.$flick.eq(1), tempData);
-			tempData.week = data.week - 1;
-			if (tempData.week === 0) {
-				tempData.week = 53;
-				tempData.year -= 1;
-			}
-			zp.week.initModule(jqueryMap.$flick.eq(2), tempData);
-		} else if (mod === 'month') {
-			tempData = {
-				year : data.year,
-				month: data.month + 1
-			};
-			if (tempData.month === 13) {
-				tempData.month = 1;
-				tempData.year += 1;
-			}
-			zp.month.initModule(jqueryMap.$flick.eq(1), tempData);
-			tempData = {
-				year : data.year,
-				month: data.month - 1
-			};
-			if (tempData.month === 0) {
-				tempData.month = 12;
-				tempData.year -= 1;
-			}
-			zp.month.initModule(jqueryMap.$flick.eq(2), tempData);
-		} else if (mod === 'year') {
-			tempData = {
-				year: data.year + 1
-			};
-			zp.year.initModule(jqueryMap.$flick.eq(1), tempData);
-			tempData = {
-				year: data.year - 1
-			};
-			zp.year.initModule(jqueryMap.$flick.eq(2), tempData);
+		zp[mod].initModule(jqueryMap.$flickPanel.eq(0), data);
+		switch (mod) {
+			case 'day':
+				tempData = zp.calendar.getNextDate(data);
+				zp.day.initModule(jqueryMap.$flickPanel.eq(1), tempData);
+				tempData = zp.calendar.getPrevDate(data);
+				zp.day.initModule(jqueryMap.$flickPanel.eq(2), tempData);
+				break;
+			case 'week':
+				tempData.week = data.week + 1;
+				tempData.year = data.year;
+				if (tempData.week === 54) {
+					tempData.week = 1;
+					tempData.year += 1;
+				}
+				zp.week.initModule(jqueryMap.$flickPanel.eq(1), tempData);
+				tempData.week = data.week - 1;
+				if (tempData.week === 0) {
+					tempData.week = 53;
+					tempData.year -= 1;
+				}
+				zp.week.initModule(jqueryMap.$flickPanel.eq(2), tempData);
+				break;
+			case 'month':
+				tempData = {
+					year: data.year,
+					month: data.month + 1
+				};
+				if (tempData.month === 13) {
+					tempData.month = 1;
+					tempData.year += 1;
+				}
+				zp.month.initModule(jqueryMap.$flickPanel.eq(1), tempData);
+				tempData = {
+					year: data.year,
+					month: data.month - 1
+				};
+				if (tempData.month === 0) {
+					tempData.month = 12;
+					tempData.year -= 1;
+				}
+				zp.month.initModule(jqueryMap.$flickPanel.eq(2), tempData);
+				break;
+			case 'year':
+				tempData = {
+					year: data.year + 1
+				};
+				zp.year.initModule(jqueryMap.$flickPanel.eq(1), tempData);
+				tempData = {
+					year: data.year - 1
+				};
+				zp.year.initModule(jqueryMap.$flickPanel.eq(2), tempData);
+				break;
+			default:
+				throw 'initMain error!';
 		}
 		stateMap.current = mod;
 		initPosition();
 		setTitle(data);
 	};
 	setTitle = function (data) {
-		var title_str = '',
-			style_str = '',
+		var titleStr = '',
+			styleStr = '',
 			cur = stateMap.current;
 		switch (cur) {
 			case 'day':
 				if (data.day === 0) {
-					style_str = 'style="color:yellow;"';
+					styleStr = 'style="color:yellow;"';
 				} else if (data.day === 6) {
-					style_str = 'style="color:blue;"';
+					styleStr = 'style="color:blue;"';
 				}
-				title_str = '<span class="title-year">' + data.year
+				titleStr = '<span class="title-year">' + data.year
 					+ '</span>.<span class="title-month">' + data.month
 					+ '</span>.<span class="title-date">' + data.date
-					+ '</span> <span class="title-day" ' + style_str + '>'
+					+ '</span> <span class="title-day" ' + styleStr + '>'
 					+ configMap.day[data.day] + '</span> <span class="title-week">'
 					+ data.week + '주차</span>';
 				break;
 			case 'week':
 				data.week = data.week || zp.calendar.getWeekNum(data.date, data.month, data.year);
-				title_str = '<span class="title-year">' + data.year
+				titleStr = '<span class="title-year">' + data.year
 					+ '</span>년 <span class="title">' + data.week + '주차</span>';
 				break;
 			case 'month':
-				title_str = '<span class="title-year">' + data.year
+				titleStr = '<span class="title-year">' + data.year
 					+ '년</span> <span class="title">' + data.month + '월</span>';
 				break;
 			case 'year':
-				title_str = '<span class="title">' + data.year + '년</span>';
+				titleStr = '<span class="title">' + data.year + '년</span>';
 				break;
 			case 'todo':
-				title_str = '<span class="title">할일</span>';
+				titleStr = '<span class="title">할일</span>';
 				break;
 			case 'plan':
-				title_str = '<span class="title">일정</span>';
+				titleStr = '<span class="title">일정</span>';
 				break;
 			case 'dday':
-				title_str = '<span class="title">D-day / 기념일</span>';
+				titleStr = '<span class="title">D-day / 기념일</span>';
 				break;
+			default:
+				throw 'setTitle Error!';
 		}
-		jqueryMap.$info.html(title_str);
+		jqueryMap.$info.html(titleStr);
 		if (data) {
 			if (data.hasOwnProperty('date')) {
 				stateMap.date_info.date = data.date;
@@ -1717,21 +1719,21 @@ zp.shell = (function () {
 	};
 	onSwipe = function (direction, cur_data) {
 		var cur = stateMap.current,
-			temp_data,
-			page;
+			tempData, page;
 		stateMap.act = 'swipe';
 		cur_data.year = parseInt(cur_data.year, 10);
 		cur_data.month = parseInt(cur_data.month, 10);
 		cur_data.week = parseInt(cur_data.week, 10);
 		if (direction === 'left') { // show next
-			console.log('swiped to the left!');
+			setPosition(direction);
+			adjustHeight();
 			page = (stateMap.fidx + 1) % 3;
 			switch (cur) {
 				case 'day':
 					cur_data = setTitle(zp.calendar.getNextDate(cur_data));
 					// 다음 모듈을 미리 로드(2일 후)
-					temp_data = zp.calendar.getNextDate(cur_data);
-					zp[cur].initModule(jqueryMap.$flick.eq(page), temp_data);
+					tempData = zp.calendar.getNextDate(cur_data);
+					zp[cur].initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					// 주소는 1일 후로
 					setCurAnchor(cur, cur_data.year + ('0' + cur_data.month).slice(-2) + ('0' + cur_data.date).slice(-2));
 					break;
@@ -1742,13 +1744,13 @@ zp.shell = (function () {
 						cur_data.year += 1;
 					}
 					// 다음 모듈을 미리 로드(2주 후)
-					temp_data = setTitle(cur_data);
-					temp_data.week += 1;
-					if (temp_data.week === 54) {
-						temp_data.week = 1;
-						temp_data.year += 1;
+					tempData = setTitle(cur_data);
+					tempData.week += 1;
+					if (tempData.week === 54) {
+						tempData.week = 1;
+						tempData.year += 1;
 					}
-					zp.week.initModule(jqueryMap.$flick.eq(page), temp_data);
+					zp.week.initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					// 주소는 1달 후로
 					setCurAnchor('week', cur_data.year + ('0' + cur_data.week).slice(-2));
 					break;
@@ -1759,13 +1761,13 @@ zp.shell = (function () {
 						cur_data.year += 1;
 					}
 					// 다음 모듈을 미리 로드(2달 후)
-					temp_data = setTitle(cur_data);
-					temp_data.month += 1;
-					if (temp_data.month === 13) {
-						temp_data.month = 1;
-						temp_data.year += 1;
+					tempData = setTitle(cur_data);
+					tempData.month += 1;
+					if (tempData.month === 13) {
+						tempData.month = 1;
+						tempData.year += 1;
 					}
-					zp.month.initModule(jqueryMap.$flick.eq(page), temp_data);
+					zp.month.initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					// 주소는 1달 후로
 					setCurAnchor('month', cur_data.year + ('0' + cur_data.month).slice(-2));
 					break;
@@ -1773,9 +1775,9 @@ zp.shell = (function () {
 					cur_data.year += 1;
 					// 다음 모듈을 미리 로드 (2년 후)
 					cur_data = setTitle(cur_data);
-					temp_data = $.extend({}, cur_data);
-					temp_data.year += 1;
-					zp.year.initModule(jqueryMap.$flick.eq(page), temp_data);
+					tempData = $.extend({}, cur_data);
+					tempData.year += 1;
+					zp.year.initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					setCurAnchor('year', cur_data.year);
 					break;
 				case 'todo':
@@ -1790,15 +1792,18 @@ zp.shell = (function () {
 					stateMap.current = 'todo';
 					setTitle();
 					break;
+				default:
+					throw 'onSwipe left error!';
 			}
 		} else { // right prev
-			console.log('swiped to the right!');
+			setPosition(direction);
+			adjustHeight();
 			page = (stateMap.fidx - 1) % 3;
 			switch (cur) {
 				case 'day':
 					cur_data = setTitle(zp.calendar.getPrevDate(cur_data));
-					temp_data = zp.calendar.getPrevDate(cur_data);
-					zp[cur].initModule(jqueryMap.$flick.eq(page), temp_data);
+					tempData = zp.calendar.getPrevDate(cur_data);
+					zp[cur].initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					setCurAnchor(cur, cur_data.year + ('0' + cur_data.month).slice(-2) + ('0' + cur_data.date).slice(-2));
 					break;
 				case 'week':
@@ -1808,13 +1813,13 @@ zp.shell = (function () {
 						cur_data.year -= 1;
 					}
 					// 다음 모듈을 미리 로드(2주 후)
-					temp_data = setTitle(cur_data);
-					temp_data.week -= 1;
-					if (temp_data.week === 0) {
-						temp_data.week = 53;
-						temp_data.year -= 1;
+					tempData = setTitle(cur_data);
+					tempData.week -= 1;
+					if (tempData.week === 0) {
+						tempData.week = 53;
+						tempData.year -= 1;
 					}
-					zp.week.initModule(jqueryMap.$flick.eq(page), temp_data);
+					zp.week.initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					// 주소는 1달 후로
 					setCurAnchor('week', cur_data.year + ('0' + cur_data.week).slice(-2));
 					break;
@@ -1824,20 +1829,20 @@ zp.shell = (function () {
 						cur_data.month = 12;
 						cur_data.year -= 1;
 					}
-					temp_data = setTitle(cur_data);
-					temp_data.month -= 1;
-					if (temp_data.month === 0) {
-						temp_data.month = 12;
-						temp_data.year -= 1;
+					tempData = setTitle(cur_data);
+					tempData.month -= 1;
+					if (tempData.month === 0) {
+						tempData.month = 12;
+						tempData.year -= 1;
 					}
-					zp[cur].initModule(jqueryMap.$flick.eq(page), temp_data);
+					zp[cur].initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					setCurAnchor(cur, cur_data.year + ('0' + cur_data.month).slice(-2));
 					break;
 				case 'year':
 					cur_data.year -= 1;
-					temp_data = setTitle(cur_data);
-					temp_data.year -= 1;
-					zp[cur].initModule(jqueryMap.$flick.eq(page), temp_data);
+					tempData = setTitle(cur_data);
+					tempData.year -= 1;
+					zp[cur].initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					setCurAnchor(cur, cur_data.year);
 					break;
 				case 'todo':
@@ -1852,9 +1857,11 @@ zp.shell = (function () {
 					stateMap.current = 'plan';
 					setTitle();
 					break;
+				default:
+					throw 'onSwipe right error!';
 			}
 		}
-		jqueryMap.$flick.eq(page).css('top', 0);
+		jqueryMap.$flickPanel.eq(page).css('top', 0);
 		stateMap.date_info = cur_data;
 		return cur_data;
 	};
@@ -1876,9 +1883,9 @@ zp.shell = (function () {
 		localStorage.user = JSON.stringify(user_map);
 		zp.model.configModule(user_map.name);
 		console.log('online mode');
-		if (!localStorage.first && JSON.parse(localStorage.first)) {
-			introApp();
-		}
+		//if (!localStorage.first && JSON.parse(localStorage.first)) {
+		//	introApp();
+		//}
 	};
 	onSearchDate = function () {
 		zp.modal.configModule({set_cur_anchor: setCurAnchor});
@@ -1887,7 +1894,6 @@ zp.shell = (function () {
 	};
 	onSubmit = function (e, data) {
 		e.preventDefault();
-		console.log('onSubmit', data);
 		setCurAnchor(data);
 	};
 	onClickCell = function (e, data) {
@@ -1909,52 +1915,53 @@ zp.shell = (function () {
 		return $.extend(true, {}, stateMap.anchor_map);
 	};
 	changeAnchorPart = function (arg_map) {
-		var anchor_map_revise = copyAnchorMap(),
-			bool_return = true,
-			key_name, key_name_dep;
-		for (key_name in arg_map) {
-			if (arg_map.hasOwnProperty(key_name)) {
-				if (key_name.indexOf('_') === 0) {
+		var anchorMapRevise = copyAnchorMap(),
+			boolReturn = true,
+			keyName, keyNameDep;
+		for (keyName in arg_map) {
+			if (arg_map.hasOwnProperty(keyName)) {
+				if (keyName.indexOf('_') === 0) {
 					continue;
 				}
-				anchor_map_revise[key_name] = arg_map[key_name];
-				if (arg_map[key_name] === undefined) {
-					delete arg_map[key_name];
-					delete anchor_map_revise[key_name];
+				anchorMapRevise[keyName] = arg_map[keyName];
+				if (arg_map[keyName] === undefined) {
+					delete arg_map[keyName];
+					delete anchorMapRevise[keyName];
 				}
-				key_name_dep = '_' + key_name;
-				if (arg_map[key_name_dep]) {
-					anchor_map_revise[key_name_dep] = arg_map[key_name_dep];
+				keyNameDep = '_' + keyName;
+				if (arg_map[keyNameDep]) {
+					anchorMapRevise[keyNameDep] = arg_map[keyNameDep];
 				} else {
-					delete anchor_map_revise[key_name_dep];
-					delete anchor_map_revise['_s' + key_name_dep];
+					delete anchorMapRevise[keyNameDep];
+					delete anchorMapRevise['_s' + keyNameDep];
 				}
 			}
 		}
 		try {
-			$.uriAnchor.setAnchor(anchor_map_revise);
-		} catch (error) {
+			$.uriAnchor.setAnchor(anchorMapRevise);
+		} catch (err) {
+			console.warn('changeanchorpart', err);
 			$.uriAnchor.setAnchor(stateMap.anchor_map, null, true);
-			bool_return = false;
+			boolReturn = false;
 		}
-		return bool_return;
+		return boolReturn;
 	};
 	setCurAnchor = function (status, date) {
-		var arg_map = {
+		var argMap = {
 			current: status,
-			date   : date
+			date: date
 		};
-		return changeAnchorPart(arg_map);
+		return changeAnchorPart(argMap);
 	};
 	onHashchange = function () {
 		var
 			anchorMapPrevious = copyAnchorMap(),
-			anchorMapProposed, _s_cur_previous, _s_cur_proposed, s_cur_proposed,
-			_s_date_previous, _s_date_proposed,
+			anchorMapProposed, currentStringPrevious, currentStringProposed, current,
+			dateStringPrevious, dateStringProposed,
 			data = {};
-		console.log(
+		console.info(
 			new Date().getHours(), new Date().getMinutes(),
-			new Date().getSeconds(), '해시가 변경이 시도되었습니다.'
+			new Date().getSeconds(), '해시 변경.'
 		);
 		try {
 			anchorMapProposed = $.uriAnchor.makeAnchorMap();
@@ -1967,20 +1974,22 @@ zp.shell = (function () {
 			anchorMapProposed.current = 'day';
 		}
 		stateMap.anchor_map = anchorMapProposed;
-		_s_date_previous = anchorMapPrevious._s_date;
-		_s_date_proposed = anchorMapProposed._s_date;
-		_s_cur_previous = anchorMapPrevious._s_current;
-		_s_cur_proposed = anchorMapProposed._s_current;
+		/** @namespace anchorMapPrevious._s_date */
+		dateStringPrevious = anchorMapPrevious._s_date;
+		dateStringProposed = anchorMapProposed._s_date;
+		/** @namespace anchorMapPrevious._s_current */
+		currentStringPrevious = anchorMapPrevious._s_current;
+		currentStringProposed = anchorMapProposed._s_current;
 		if (!Object.keys(anchorMapPrevious).length ||
-			_s_cur_previous !== _s_cur_proposed ||
-			_s_date_previous !== _s_date_proposed) {
-			s_cur_proposed = anchorMapProposed.current;
-			switch (s_cur_proposed) {
+			currentStringPrevious !== currentStringProposed ||
+			dateStringPrevious !== dateStringProposed) {
+			current = anchorMapProposed.current;
+			switch (current) {
 				case 'year':
 					if (stateMap.act === 'reload') {
-						if (_s_date_proposed) {
+						if (dateStringProposed) {
 							data.year = stateMap.date_info.year =
-								parseInt(_s_date_proposed.substr(0, 4), 10);
+								parseInt(dateStringProposed.substr(0, 4), 10);
 						}
 						initMain('year', data);
 					} else {
@@ -1989,11 +1998,11 @@ zp.shell = (function () {
 					break;
 				case 'month':
 					if (stateMap.act === 'reload') {
-						if (_s_date_proposed) {
+						if (dateStringProposed) {
 							data.year = stateMap.date_info.year =
-								parseInt(_s_date_proposed.substr(0, 4), 10);
+								parseInt(dateStringProposed.substr(0, 4), 10);
 							data.month = stateMap.date_info.month =
-								parseInt(_s_date_proposed.substr(4, 2), 10);
+								parseInt(dateStringProposed.substr(4, 2), 10);
 						}
 						initMain('month', data);
 					} else {
@@ -2002,11 +2011,11 @@ zp.shell = (function () {
 					break;
 				case 'week':
 					if (stateMap.act === 'reload') {
-						if (_s_date_proposed) {
+						if (dateStringProposed) {
 							data.year = stateMap.date_info.year =
-								parseInt(_s_date_proposed.substr(0, 4), 10);
+								parseInt(dateStringProposed.substr(0, 4), 10);
 							data.week = stateMap.date_info.week =
-								parseInt(_s_date_proposed.substr(4, 2), 10);
+								parseInt(dateStringProposed.substr(4, 2), 10);
 						}
 						initMain('week', data);
 					} else {
@@ -2015,13 +2024,13 @@ zp.shell = (function () {
 					break;
 				case 'day':
 					if (stateMap.act === 'reload') {
-						if (_s_date_proposed) {
+						if (dateStringProposed) {
 							data.year = stateMap.date_info.year =
-								parseInt(_s_date_proposed.substr(0, 4), 10);
+								parseInt(dateStringProposed.substr(0, 4), 10);
 							data.month = stateMap.date_info.month =
-								parseInt(_s_date_proposed.substr(4, 2), 10);
+								parseInt(dateStringProposed.substr(4, 2), 10);
 							data.date = stateMap.date_info.date =
-								parseInt(_s_date_proposed.substr(6, 2), 10);
+								parseInt(dateStringProposed.substr(6, 2), 10);
 						} else {
 							data.year = stateMap.date_info.year;
 							data.month = stateMap.date_info.month;
@@ -2035,27 +2044,27 @@ zp.shell = (function () {
 					}
 					break;
 				case 'plan':
-					initPosition();
-					zp.plan.initModule(jqueryMap.$flick.eq(0));
-					zp.dday.initModule(jqueryMap.$flick.eq(1));
-					zp.todo.initModule(jqueryMap.$flick.eq(2));
+					zp.plan.initModule(jqueryMap.$flickPanel.eq(0));
+					zp.dday.initModule(jqueryMap.$flickPanel.eq(1));
+					zp.todo.initModule(jqueryMap.$flickPanel.eq(2));
 					stateMap.current = 'plan';
+					initPosition();
 					setTitle();
 					break;
 				case 'todo':
-					initPosition();
-					zp.todo.initModule(jqueryMap.$flick.eq(0));
-					zp.plan.initModule(jqueryMap.$flick.eq(1));
-					zp.dday.initModule(jqueryMap.$flick.eq(2));
+					zp.todo.initModule(jqueryMap.$flickPanel.eq(0));
+					zp.plan.initModule(jqueryMap.$flickPanel.eq(1));
+					zp.dday.initModule(jqueryMap.$flickPanel.eq(2));
 					stateMap.current = 'todo';
+					initPosition();
 					setTitle();
 					break;
 				case 'dday':
-					initPosition();
-					zp.dday.initModule(jqueryMap.$flick.eq(0));
-					zp.todo.initModule(jqueryMap.$flick.eq(1));
-					zp.plan.initModule(jqueryMap.$flick.eq(2));
+					zp.dday.initModule(jqueryMap.$flickPanel.eq(0));
+					zp.todo.initModule(jqueryMap.$flickPanel.eq(1));
+					zp.plan.initModule(jqueryMap.$flickPanel.eq(2));
 					stateMap.current = 'dday';
+					initPosition();
 					setTitle();
 					break;
 				default:
@@ -2066,14 +2075,26 @@ zp.shell = (function () {
 		}
 	};
 	initPosition = function () {
-		jqueryMap.$main.css('height', $(window).height() - jqueryMap.$header.height());
-		jqueryMap.$flick.css('min-height', $(window).height() - jqueryMap.$header.height());
-		jqueryMap.$flick.eq(0).css('left', '0%');
-		jqueryMap.$flick.eq(1).css('left', '100%');
-		jqueryMap.$flick.eq(2).css('left', '-100%');
+		jqueryMap.$flickPanel.eq(0).css('transform', 'translate3d(100%,0,0)');
+		jqueryMap.$flickPanel.eq(1).css('transform', 'translate3d(200%,0,0)');
+		jqueryMap.$flickPanel.eq(2).css('transform', 'translate3d(0%,0,0)');
 		stateMap.fidx = 0;
+		adjustHeight();
+		console.log('init');
 	};
-	setPosition = function () {
+	adjustHeight = function () {
+		var $centerPanel = jqueryMap.$flickPanel.eq(stateMap.fidx);
+		var centerHeight = $centerPanel.height();
+		var minHeight = $(window).height() - jqueryMap.$header.height() - 1;
+		jqueryMap.$flickPanel.css({minHeight: minHeight});
+		if (centerHeight < minHeight) {
+			centerHeight = minHeight;
+			//$centerPanel.css({minHeight: minHeight});
+		}
+		console.log('adjust', $centerPanel, minHeight, centerHeight);
+		jqueryMap.$flickView.css('height', centerHeight);
+	};
+	setPosition = function (direction) {
 		var cidx, ridx, lidx;
 		stateMap.fidx %= 3;
 		cidx = stateMap.fidx;
@@ -2085,79 +2106,111 @@ zp.shell = (function () {
 		if (cidx === 2) {
 			ridx = 0;
 		}
-		console.log(lidx, cidx, ridx);
-		jqueryMap.$flick.eq(lidx).css({left: '-100%'});
-		jqueryMap.$flick.eq(cidx).css({left: '0%'});
-		jqueryMap.$flick.eq(ridx).css({left: '100%'});
+		if (direction === 'left') {
+			setTimeout(function () {
+				jqueryMap.$flickPanel.eq(lidx).css('transform', 'translate3d(0%,0,0)');
+				jqueryMap.$flickCon.css({
+					transform: 'translate3d(0,0,0)',
+					webkitTransition: '0ms'
+				});
+				jqueryMap.$flickPanel.eq(cidx).css('transform', 'translate3d(100%,0,0)');
+				jqueryMap.$flickPanel.eq(ridx).css('transform', 'translate3d(200%,0,0)');
+			}, 300);
+		} else if (direction === 'right') {
+			setTimeout(function () {
+				jqueryMap.$flickPanel.eq(ridx).css('transform', 'translate3d(200%,0,0)');
+				jqueryMap.$flickCon.css({
+					transform: 'translate3d(0,0,0)',
+					webkitTransition: '0ms'
+				});
+				jqueryMap.$flickPanel.eq(cidx).css('transform', 'translate3d(100%,0,0)');
+				jqueryMap.$flickPanel.eq(lidx).css('transform', 'translate3d(0%,0,0)');
+			}, 300);
+		}
 	};
 	getDirection = function (x, y) {
-		var slope = Math.abs(parseFloat((y / x).toFixed(2))), dir,
-			slope_h = ((window.innerHeight / 2) / window.innerWidth).toFixed(2),
-			slope_x = (window.innerHeight / (window.innerWidth / 2)).toFixed(2);
-		if (slope >= slope_h) {
-			dir = 2;
-		} else if (slope <= slope_x) {
-			dir = 0;
-		} else {
+		var dir,
+			standard = Math.abs(y / x) > 1;
+		if (standard) { // 세로
 			dir = 1;
+		} else { // 가로
+			dir = 0;
 		}
 		return dir;
 	};
 	onTouchstart = function (e) {
-		jqueryMap.$flickCon.css({webkitTransition: 'null'});
-		stateMap.touch_start_x = stateMap.touch_x = e.originalEvent.touches[0].clientX;
-		stateMap.touch_start_y = stateMap.touch_y = e.originalEvent.touches[0].clientY;
+		stateMap.direction = undefined;
+		stateMap.gap_x = 0;
+		jqueryMap.$flickCon.css({webkitTransition: '0ms', transition: '0ms'});
+		stateMap.touch_start_x = e.originalEvent.touches[0].clientX;
+		stateMap.touch_x = e.originalEvent.touches[0].clientX;
+		stateMap.touch_start_y = e.originalEvent.touches[0].clientY;
+		stateMap.touch_y = e.originalEvent.touches[0].clientY;
 		return true;
 	};
 	onTouchmove = function (e) {
+		jqueryMap.$flickCon.css('pointer-events', 'none');
 		stateMap.touch_x = e.originalEvent.touches[0].clientX;
 		stateMap.touch_y = e.originalEvent.touches[0].clientY;
 		stateMap.gap_x = stateMap.touch_x - stateMap.touch_start_x;
 		stateMap.gap_y = stateMap.touch_y - stateMap.touch_start_y;
 		stateMap.direction = stateMap.direction || getDirection(stateMap.gap_x, stateMap.gap_y);
-		if (stateMap.direction === 0) {
-			e.preventDefault();
-			jqueryMap.$flickCon.css({transform: 'translate3d(' + stateMap.gap_x + 'px,0,0)'});
-		}
 		stateMap.state = 'drag';
+		if (stateMap.direction === 0) { // 가로면
+			jqueryMap.$flickCon.css({
+				transform: 'translate3d(' + stateMap.gap_x + 'px,0,0)'
+			});
+			$('body').css({
+				overflow: 'hidden'
+			});
+			e.preventDefault();
+		} else { // 세로면
+			stateMap.gap_x = 0;
+		}
 	};
 	onTouchend = function () {
-		if (Math.abs(stateMap.gap_x) > $(window).width() / 2.5) {
+		var windowWidth = $(window).width();
+		$('body').css({
+			overflow: 'auto'
+		});
+		jqueryMap.$flickCon.css({
+			'pointer-events': 'auto'
+		});
+		if (Math.abs(stateMap.gap_x) > windowWidth / 2.5) {
 			if (stateMap.gap_x < 0) {
 				jqueryMap.$flickCon.css({
-					transform: 'translate3d(-100%,0,0)', webkitTransition: '300ms'
+					transform: 'translate3d(' + -windowWidth + 'px,0,0)',
+					transition: '300ms'
 				});
 				stateMap.fidx++;
 				onSwipe('left', stateMap.date_info);
 			} else {
 				jqueryMap.$flickCon.css({
-					transform: 'translate3d(100%,0,0)', webkitTransition: '300ms'
+					transform: 'translate3d(' + windowWidth + 'px,0,0)',
+					transition: '300ms'
 				});
 				stateMap.fidx--;
 				onSwipe('right', stateMap.date_info);
 			}
-			setPosition();
-			jqueryMap.$flickCon.delay(0).queue(function (next) {
-				$(this).css({
-					transform       : 'translate3d(0,0,0)',
-					webkitTransition: 'null'
-				});
-				next();
-			});
 		} else {
 			jqueryMap.$flickCon.css({
-				transform       : 'translate3d(0,0,0)',
-				webkitTransition: '200ms'
+				transform: 'translate3d(0,0,0)',
+				transition: '300ms'
 			});
 		}
-		stateMap.direction = undefined;
-		stateMap.gap_x = 0;
-		return true;
 	};
+	onError = function (errorMsg, url, lineNumber, column, errorObj) {
+		if (typeof errorMsg === 'string' && errorMsg.indexOf('Script error.') > -1) {
+			return;
+		}
+		console.log('Error: ', errorMsg, ' Script: ' + url + ' Line: ' + lineNumber + ' Column: ' + column + ' StackTrace: ' + errorObj);
+	};
+
 	initModule = function ($container) {
 		var
 			online = localStorage.online ? JSON.parse(localStorage.online) :
-				false;
+				false,
+			first = localStorage.first ? JSON.parse(localStorage.first) : false;
 		$.uriAnchor.configModule({
 			schema_map: configMap.anchor_schema_map
 		});
@@ -2170,22 +2223,13 @@ zp.shell = (function () {
 		} else {
 			localStorage.user = 'anon';
 		}
-		initPosition();
 		$(window)
-			.on('error', function (errorMsg, url, lineNumber, column, errorObj) {
-				if (errorMsg && errorMsg.indexOf('Script error.') > -1) {
-					return;
-				}
-				alert('Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber
-					+ ' Column: ' + column + ' StackTrace: ' + errorObj);
-			})
+			.on('error', onError)
 			.on('hashchange', onHashchange).trigger('hashchange')
-			.on('orientationchange resize', function () {
-				var windowHeight = $(window).height(),
-					headerHeight = jqueryMap.$header.height();
-				jqueryMap.$main.css('height', windowHeight - headerHeight);
-				jqueryMap.$flick.css('min-height', windowHeight - headerHeight);
-			});
+			.on('orientationchange resize', adjustHeight);
+		if (first) {
+			introApp();
+		}
 		$.gevent.subscribe(jqueryMap.$user, 'login', onLoginSuccess);
 		$.gevent.subscribe(jqueryMap.$container, 'submit', onSubmit);
 		$.gevent.subscribe(jqueryMap.$main, 'day', initDay);
@@ -2193,6 +2237,7 @@ zp.shell = (function () {
 		$.gevent.subscribe(jqueryMap.$main, 'month', initMonth);
 		$.gevent.subscribe(jqueryMap.$main, 'year', initYear);
 		$.gevent.subscribe(jqueryMap.$modal, 'cell', onClickCell);
+		$.gevent.subscribe(jqueryMap.$container, 'panelLoaded', adjustHeight);
 		// 이벤트 핸들러
 		jqueryMap.$user.on('click', toggleUserMenu);
 		jqueryMap.$logout.on('click', onLogoutMenu);
@@ -2217,7 +2262,7 @@ zp.shell = (function () {
 	};
 }());
 zp.day = (function () {
-	'use strict';	
+	'use strict';
 	var configMap = {
 			settable_map: {
 				set_cur_anchor: true
@@ -2231,71 +2276,52 @@ zp.day = (function () {
 			tr_h: 40
 		},
 		stateMap = {
-			day_list: [],
-			update: false
+			dayList: [],
+			dayMap: {},
+			update: false,
+			load_state: 0
 		},
 		jqueryMap = {},
-		setJqueryMap, configModule, initModule, insertSchedule, onClickPlan, 
-		Day, addTimeIndicator, onClickCell;
-
-	setJqueryMap = function ($container, date_str) {
-		jqueryMap.$container = $container;
-		jqueryMap[date_str] = {
+		configModule, initModule, loadCache, Day;
+	Day = function ($container, data, dateStr) {
+		this.date = parseInt(data.date, 10);
+		this.month = parseInt(data.month, 10);
+		this.year = parseInt(data.year, 10);
+		this.dateStr = dateStr;
+		this.loadState = 0;
+		this.initiate($container, data);
+	};
+	Day.prototype.initiate = function ($container, data) {
+		$container.html($('#zp-day').html());
+		this.setJqueryMap($container, this.dateStr);
+		this.insertSchedule(data, this.dateStr);
+		jqueryMap[this.dateStr].$ddayTable.attr('data-date', this.dateStr);
+		jqueryMap[this.dateStr].$planTable.on('click', '.todo, .plan, .dday', this.onClickPlan);
+		jqueryMap[this.dateStr].$planTable.on('click', 'td', data, this.onClickCell);
+		console.log(this);
+		console.info(this.dateStr, 'object loaded.');
+	};
+	Day.prototype.setJqueryMap = function ($container, dateStr) {
+		jqueryMap[dateStr] = {
 			$container: $container,
 			$ddayTable: $container.find('.dday-table'),
 			$planTable: $container.find('.plan-table')
 		};
 	};
-
-	Day = function ($container, data) {
-		var
-			day = {
-				date: parseInt(data.date, 10),
-				month: parseInt(data.month, 10),
-				year: parseInt(data.year, 10)
-			},
-			month = data.month,
-			date = data.date,
-			year = data.year,
-			dateStr;
-		month = ('0' + day.month).slice(-2);
-		date = ('0' + day.date).slice(-2);
-		dateStr = year + month + date;
-		console.log(dateStr, '모듈을 로딩합니다.');
-		$container.load('/html/zp.day.html', function () {
-			setJqueryMap($container, dateStr);
-			insertSchedule(data, dateStr);
-			if (day.date === configMap.today.date &&
-					day.month === configMap.today.month &&
-					day.year === configMap.today.year) {
-				addTimeIndicator(dateStr);
-				setInterval(addTimeIndicator(dateStr), 60000);
+	Day.prototype.checkLoadState = function () {
+		this.loadState++;
+		console.log(this.loadState);
+		if (this.loadState === 4) {
+			$.gevent.publish('panelLoaded');
+			this.loadState = 0;
+			stateMap.dayList.push(this.dateStr);
+			stateMap.dayMap[this.dateStr] = jqueryMap[this.dateStr];
+			if (stateMap.dayList.length > 10) {
+				delete stateMap.dayMap[stateMap.dayList.shift()];
 			}
-			jqueryMap[dateStr].$ddayTable.attr('data-date', dateStr);
-			jqueryMap[dateStr].$planTable.on('click', '.todo, .plan, .dday', onClickPlan);
- 			jqueryMap[dateStr].$planTable.on('click', 'td', data, onClickCell);
-		});
+		}
 	};
-
-	onClickCell = function (e) {
-		var
-			time = $(this).data('time'),
-			data = {
-				year: e.data.year,
-				month: e.data.month,
-				date: e.data.date,
-				time: time
-			};
-		$.gevent.publish('cell', [data]);
-	};
-	
-	onClickPlan = function () {
-		var c = $(this).attr('class');
-		if (c === 'whole') {c = 'plan';}
-		$.gevent.publish('submit', [c]);
-	};
-
-	addTimeIndicator = function (str) {
+	Day.prototype.addTimeIndicator = function (str) {
 		var hour = new Date().getHours(),
 			minute = new Date().getMinutes(),
 			$line, top, ddayOffset,
@@ -2308,14 +2334,14 @@ zp.day = (function () {
 		$line = $('<div/>').addClass('time-indicator').css({top: top});
 		jqueryMap[str].$container.prepend($line);
 	};
-
-	insertSchedule = function (data, str) {
+	Day.prototype.insertSchedule = function (data, str) {
 		var
 			date, month, stime, etime, ctime, startTime, endTime, time,
-			todoMap, planMap, ddayMap,
+			todoMap, planMap, ddayMap, datelessResult,
 			i, todoResult, planResult, ddayResult,
 			dateStr, $div, $tr, top, hour, min,
-			$frag = $(document.createDocumentFragment());
+			$frag = $(document.createDocumentFragment()),
+			self = this;
 		month = ('0' + data.month).slice(-2);
 		date = ('0' + data.date).slice(-2);
 		dateStr = data.year + '-' + month + '-' + date;
@@ -2329,7 +2355,7 @@ zp.day = (function () {
 		ddayResult.done(function (ddayList) {
 			for (i = 0; i < ddayList.length; i++) {
 				ddayMap = ddayList[i];
-				if (ddayMap && ddayMap.target === dateStr) {
+				if (ddayMap) {
 					$tr = $('<tr/>').attr('data-id', ddayMap._id).append('<td/>');
 					$tr.find('td').addClass('dday').text(ddayMap.text);
 					$tr.prependTo($frag);
@@ -2338,12 +2364,17 @@ zp.day = (function () {
 			$frag.appendTo(jqueryMap[str].$ddayTable);
 		});
 		ddayResult.fail(function (err) {
-			console.log(err);
+			if (err !== 'not_found') {
+				console.warn(err);
+			}
+		});
+		ddayResult.always(function () {
+			self.checkLoadState();
 		});
 		todoResult.done(function (todoList) {
 			for (i = 0; i < todoList.length; i++) {
 				todoMap = todoList[i];
-				if (todoMap && todoMap.date === dateStr) {
+				if (todoMap) {
 					hour = todoMap.time.substr(0, 2);
 					min = todoMap.time.substr(3, 2);
 					top = hour * configMap.tr_h + min * configMap.tr_h / 60 + 1;
@@ -2356,7 +2387,12 @@ zp.day = (function () {
 			$frag.appendTo(jqueryMap[str].$planTable);
 		});
 		todoResult.fail(function (err) {
-			console.log(err);
+			if (err !== 'not_found') {
+				console.warn(err);
+			}
+		});
+		todoResult.always(function () {
+			self.checkLoadState();
 		});
 		planResult.done(function (planList) {
 			for (i = 0; i < planList.length; i++) {
@@ -2365,7 +2401,9 @@ zp.day = (function () {
 					stime = new Date(planMap.startdate).getTime();
 					etime = new Date(planMap.enddate).getTime();
 					ctime = new Date(dateStr).getTime();
+					console.log(planMap, stime, etime, ctime, planMap.startdate, dateStr);
 					if (planMap.startdate === dateStr) {
+						console.log('startday');
 						hour = planMap.starttime.substr(0, 2);
 						min = planMap.starttime.substr(3, 2);
 						top = hour * configMap.tr_h + min * configMap.tr_h / 60 + 1;
@@ -2374,28 +2412,78 @@ zp.day = (function () {
 							.find('div').addClass('input').text(planMap.text + ' 시작');
 						$div.appendTo(jqueryMap[str].$planTable);
 					} else if (stime < ctime && ctime < etime) {
-						$tr = $('<tr/>').attr('data-idx', i).append('<td/>');
+						console.log('between');
+						$tr = $('<tr/>').attr('data-id', planMap._id).append('<td/>');
 						$tr.find('td').addClass('whole').text(planMap.text);
 						$tr.prependTo(jqueryMap[str].$ddayTable);
 					} else if (planMap.enddate === dateStr) {
-					 	hour = planMap.endtime.substr(0, 2);
+						console.log('endday');
+						hour = planMap.endtime.substr(0, 2);
 						min = planMap.endtime.substr(3, 2);
 						top = hour * configMap.tr_h + min * configMap.tr_h / 60 + 1;
-						$div = $('<div/>').addClass('plan').attr('data-idx', i);
+						$div = $('<div/>').addClass('plan').attr('data-id', planMap._id);
 						$div.css({top: top}).append($('<div/>'))
 							.find('div').addClass('input').text(planMap.text + '끝');
 						$div.appendTo($frag);
 					}
-				} 
+				}
 			}
 			$frag.appendTo(jqueryMap[str].$planTable);
 		});
 		planResult.fail(function (err) {
-			console.log(err);
+			if (err !== 'not_found') {
+				console.warn(err);
+			}
 		});
+		planResult.always(function () {
+			self.checkLoadState();
+		});
+		if (dateStr === configMap.today.year + '-' + ('0' + configMap.today.month).slice(-2) + '-' +
+			('0' + configMap.today.date).slice(-2)) {
+			datelessResult = zp.model.getTodo('dateless');
+			datelessResult.done(function (todoList) {
+				for (i = 0; i < todoList.length; i++) {
+					todoMap = todoList[i];
+					if (todoMap) {
+						$tr = $('<tr/>').attr('data-id', todoMap._id).append('<td/>');
+						$tr.find('td').addClass('dateless').text(todoMap.text);
+						$tr.prependTo($frag);
+					}
+				}
+				$frag.appendTo(jqueryMap[str].$ddayTable);
+				setInterval(self.addTimeIndicator(str), 60000);
+			});
+			datelessResult.fail(function (err) {
+				if (err !== 'not_found') {
+					console.warn(err);
+				}
+			});
+			datelessResult.always(function () {
+				self.checkLoadState();
+			});
+		} else {
+			self.checkLoadState();
+		}
 		return true;
 	};
-		
+	Day.prototype.onClickCell = function (e) {
+		var
+			time = $(this).data('time'),
+			data = {
+				year: e.data.year,
+				month: e.data.month,
+				date: e.data.date,
+				time: time
+			};
+		$.gevent.publish('cell', [data]);
+	};
+	Day.prototype.onClickPlan = function () {
+		var c = $(this).attr('class');
+		if (c === 'whole') {
+			c = 'plan';
+		}
+		$.gevent.publish('submit', [c]);
+	};
 	configModule = function (input_map) {
 		zp.util.setConfigMap({
 			input_map: input_map,
@@ -2404,13 +2492,15 @@ zp.day = (function () {
 		});
 		return true;
 	};
-	
 	initModule = function ($container, data) {
-		var date_str = data.year + ('0' + data.month).slice(-2) + ('0' + data.date).slice(-2);
-		stateMap.day_list[date_str] = new Day($container, data);
-		return stateMap.day_list;
+		var dateStr = data.year + ('0' + data.month).slice(-2) + ('0' + data.date).slice(-2);
+		// TODO: cache 구현
+		//if (stateMap.dayMap[dateStr]){
+		//	$container.replaceWith(stateMap.dayMap[dateStr].$container);
+		//} else {
+		console.log(stateMap.dayMap);
+		return new Day($container, data, dateStr);
 	};
-	
 	return {
 		configModule: configModule,
 		initModule: initModule
@@ -2432,14 +2522,12 @@ zp.dday = (function () {
 		jqueryMap = {},
 		setJqueryMap, showDday, configModule, initModule, onDelete, calculate,
 		updateTime, updateText, holdTap, holdStop, applyTime, applyText;
-
 	setJqueryMap = function ($container) {
 		jqueryMap = {
 			$container: $container,
-			$main: $container.find('.dday-main')
+			$main: $container.find('#dday-main')
 		};
 	};
-
 	calculate = function (target) {
 		var
 			today = new Date(),
@@ -2447,7 +2535,7 @@ zp.dday = (function () {
 			dest = new Date(obj.year, obj.month - 1, obj.date),
 			gap = dest.getTime() - today.getTime(),
 			result
-		;
+			;
 		gap = Math.ceil(gap / 1000 / 60 / 60 / 24);
 		if (gap > 0) {
 			result = 'D-' + gap;
@@ -2458,13 +2546,13 @@ zp.dday = (function () {
 		}
 		return result;
 	};
-
 	showDday = function () {
 		var
-			$text, $div, $del, ddayMap, $target, $left, target, i,
+			$text, $div, $del, ddayMap, $target, $left, $option, target, i, spinner,
 			$frag = $(document.createDocumentFragment()),
 			result = zp.model.getDday();
 		result.done(function (dday_list) {
+			$(spinner.el).remove();
 			if (dday_list.length) {
 				jqueryMap.$main.html('');
 				for (i = 0; i < dday_list.length; i++) {
@@ -2475,8 +2563,9 @@ zp.dday = (function () {
 						$text = $('<div/>').addClass('dday-text').text(ddayMap.text);
 						$target = $('<div/>').addClass('dday-target').text(target);
 						$left = $('<div/>').addClass('dday-left').text(calculate(target));
-						$del = $('<div/>').addClass('dday-del').html('<i class="fa fa-trash-o"></i>');
-						$div.append($left).append($text).append($target).append($del);
+						$del = $('<div/>').addClass('item-del').html('<i class="fa fa-trash-o"></i>');
+						$option = $('<div/>').addClass('dday-option').append($del);
+						$div.append($left).append($text).append($target).append($option);
 						$frag.append($div);
 					}
 				}
@@ -2484,12 +2573,17 @@ zp.dday = (function () {
 			}
 		});
 		result.fail(function (err) {
-			alert(err);
+			$(spinner.el).remove();
+			if (err === 'not_found') {
+				jqueryMap.$main.html('<div class="no-content">기념일이나 D-day를 작성해주세요</div>');
+			} else {
+				alert(err);
+			}
 		});
-		jqueryMap.$main.html('<div class="no-content">기념일이나 D-day를 작성해주세요</div>');
+		spinner = new Spinner().spin();
+		jqueryMap.$main.append(spinner.el);
 		return true;
 	};
-
 	onDelete = function () {
 		var
 			$item = $(this).closest('.dday-item'),
@@ -2506,25 +2600,24 @@ zp.dday = (function () {
 		});
 		return true;
 	};
-
-	holdTap = function (e) { console.log('holdtap');
+	holdTap = function (e) {
+		console.log('holdtap');
 		e.stopImmediatePropagation();
 		stateMap.taphold = setTimeout(function () {
 			if (e.target.className === 'dday-text') {
-				updateText(e.target);	
+				updateText(e.target);
 			} else if (e.target.className === 'dday-target') {
-				updateTime(e.target);	
+				updateTime(e.target);
 			}
 		}, 1000);
 		return false;
 	};
-	
-	holdStop = function (e) { console.log('holdstop');
+	holdStop = function (e) {
+		console.log('holdstop');
 		e.stopPropagation();
 		clearTimeout(stateMap.taphold);
 		return false;
 	};
-	
 	updateTime = function (target) {
 		var time = $(target).text();
 		$(target).empty().append('<input type="text" value="' + time + '"/>');
@@ -2533,7 +2626,6 @@ zp.dday = (function () {
 			origin: time
 		}, applyTime);
 	};
-	
 	updateText = function (target) {
 		var text = $(target).text();
 		$(target).empty().append('<input type="text" value="' + text + '"/>');
@@ -2542,21 +2634,19 @@ zp.dday = (function () {
 			origin: text
 		}, applyText);
 	};
-
 	applyTime = function (e) {
 		var data = e.data,
 			$target = $(data.target),
 			update = $target.find('input').val(),
 			id, date;
 		if (data.origin === update) {
-			$target.empty().text(data.origin); 			
-			return;	
+			$target.empty().text(data.origin);
+			return;
 		}
 		$target.empty().text(update);
 		id = $target.parent('.dday-item').data('id');
 		date = update.substr(0, 10);
 	};
-	
 	applyText = function (e) {
 		var data = e.data,
 			$target = $(data.target),
@@ -2577,10 +2667,8 @@ zp.dday = (function () {
 			type: 'dday'
 		});
 		localStorage.dday = JSON.stringify(dday_list);
-		localStorage.change = JSON.stringify(change_obj); 		
+		localStorage.change = JSON.stringify(change_obj);
 	};
-
-
 	configModule = function (input_map) {
 		zp.util.setConfigMap({
 			input_map: input_map,
@@ -2588,23 +2676,20 @@ zp.dday = (function () {
 			config_map: configMap
 		});
 	};
-
 	initModule = function ($container) {
-		$container.load('/html/zp.dday.html', function () {
-			stateMap.$container = $container;
-			setJqueryMap($container);
-			showDday();
-			jqueryMap.$main.on('click', '.dday-del', onDelete);
-			jqueryMap.$main.on('touchstart', '.dday-target, .dday-text', holdTap);
-			jqueryMap.$main.on('touchend', '.dday-target, .dday-text', holdStop);
-		});
+		$container.html($('#zp-dday').html());
+		stateMap.$container = $container;
+		setJqueryMap($container);
+		showDday();
+		jqueryMap.$main.on('click', '.item-del', onDelete);
+		jqueryMap.$main.on('touchstart', '.dday-target, .dday-text', holdTap);
+		jqueryMap.$main.on('touchend', '.dday-target, .dday-text', holdStop);
 		return $container;
 	};
-
 	return {
 		configModule: configModule,
 		initModule: initModule,
-				calculate: calculate
+		calculate: calculate
 	};
 }());
 zp.modal = (function () {
@@ -2632,36 +2717,37 @@ zp.modal = (function () {
 		jqueryMap = {},
 		setJqueryMap, configModule, initModule, onClickClose, onClickBack,
 		onTypeTodo, onTypePlan, onTypeDday, onSubmitTodo, onSubmitPlan, onSubmitDday,
-		onRepeat, onSetStartdate, onSearch, onToggleRepeatType,
+		onRepeat, onSetStartdate, onSearch, onToggleRepeatType, onNoDue,
 		onLogin, onClickJoin, onOffline, checkRegEmail, toToday, makeRandom,
 		onJoin, onFindPassword, onFindId, onCheckAnswer, onCheckId, onNewPassword;
 	setJqueryMap = function ($container) {
 		jqueryMap = {
-			$container : $container,
-			$close     : $container.find('.modal-close'),
-			$back      : $container.find('.modal-back'),
-			$login     : $container.find('#login-sbmt'),
-			$todo      : $container.find('#todo-sbmt'),
-			$plan      : $container.find('#plan-sbmt'),
-			$dday      : $container.find('#dday-sbmt'),
-			$join      : $container.find('#join-btn'),
-			$findpw    : $container.find('#findpw-btn'),
-			$offline   : $container.find('#offline-btn'),
-			$typeTodo  : $container.find('#type-todo'),
-			$typePlan  : $container.find('#type-plan'),
-			$typeDday  : $container.find('#type-dday'),
+			$container: $container,
+			$closeBtn: $container.find('.modal-close'),
+			$backBtn: $container.find('.modal-back'),
+			$loginSbmt: $container.find('#login-sbmt'),
+			$todoSbmt: $container.find('#todo-sbmt'),
+			$planSbmt: $container.find('#plan-sbmt'),
+			$ddaySbmt: $container.find('#dday-sbmt'),
+			$joinBtn: $container.find('#join-btn'),
+			$findPassBtn: $container.find('#findpw-btn'),
+			$offlineBtn: $container.find('#offline-btn'),
+			$typeTodo: $container.find('#type-todo'),
+			$datelessChkbx: $container.find('#todo-input-dateless'),
+			$typePlan: $container.find('#type-plan'),
+			$typeDday: $container.find('#type-dday'),
 			$checkIdBtn: $container.find('#check-id-btn'),
-			$joinSbmt  : $container.find('#join-sbmt'),
+			$joinSbmt: $container.find('#join-sbmt'),
 			$findIdForm: $container.find('#findpw-id-form'),
-			$findIdBtn : $container.find('#findpw-id-sbmt'),
-			$findPwForm: $container.find('#findpw-qst-form'),
-			$findPwBtn : $container.find('#findpw-ans-sbmt'),
-			$newPwForm : $container.find('#findpw-newpw-form'),
-			$newPwBtn  : $container.find('#findpw-newpw-sbmt'),
-			$repeat    : $container.find('#plan-input-repeat'),
+			$findIdBtn: $container.find('#findpw-id-sbmt'),
+			$answerChkForm: $container.find('#findpw-qst-form'),
+			$answerChkBtn: $container.find('#findpw-ans-sbmt'),
+			$newPassForm: $container.find('#findpw-newpw-form'),
+			$newPassBtn: $container.find('#findpw-newpw-sbmt'),
+			$repeat: $container.find('#plan-input-repeat'),
 			$repeatType: $container.find('input[name="repeat-type"]'),
-			$search    : $container.find('#search-btn'),
-			$today     : $container.find('#search-today')
+			$search: $container.find('#search-btn'),
+			$today: $container.find('#search-today')
 		};
 	};
 	onLogin = function (e) {
@@ -2671,7 +2757,7 @@ zp.modal = (function () {
 			$pw = $loginForm.find('#login-pw'),
 			id = $id.val(),
 			pw = $pw.val(),
-			data, result;
+			data, result, spinner;
 		e.preventDefault();
 		if (id.trim() === '') {
 			alert('아이디를 입력해주십시오.');
@@ -2689,6 +2775,7 @@ zp.modal = (function () {
 		};
 		result = zp.model.login(data);
 		result.done(function (data) {
+			$(spinner.el).remove();
 			alert('로그인 성공!');
 			jqueryMap.$container.hide();
 			$.gevent.publish('login', [data]);
@@ -2697,26 +2784,37 @@ zp.modal = (function () {
 			}
 		});
 		result.fail(function () {
+			$(spinner.el).remove();
 			alert('아이디가 없거나 패스워드가 틀렸습니다.');
 			$id.val('').focus();
 			$pw.val('');
 			return false;
 		});
+		spinner = new Spinner().spin();
+		jqueryMap.$container.append(spinner.el);
 	};
 	onTypeTodo = function (e) {
-		zp.modal.initModule(jqueryMap.$container, 'todo', e.data);
+		zp.modal.initModule(jqueryMap.$container, 'todo-modal', e.data);
 	};
 	onTypePlan = function (e) {
-		zp.modal.initModule(jqueryMap.$container, 'plan', e.data);
+		zp.modal.initModule(jqueryMap.$container, 'plan-modal', e.data);
 	};
 	onTypeDday = function (e) {
-		zp.modal.initModule(jqueryMap.$container, 'dday', e.data);
+		zp.modal.initModule(jqueryMap.$container, 'dday-modal', e.data);
 	};
 	onOffline = function () {
 		$.gevent.publish('zp-offline', []);
+		$('body').css({
+			height: '100%',
+			overflow: 'auto'
+		});
 		jqueryMap.$container.hide();
 	};
 	onClickClose = function () {
+		$('body').css({
+			height: '100%',
+			overflow: 'auto'
+		});
 		jqueryMap.$container.empty().hide();
 	};
 	onClickBack = function () {
@@ -2735,9 +2833,9 @@ zp.modal = (function () {
 		result = zp.model.findId(data.id);
 		result.done(function (data) {
 			jqueryMap.$findIdForm.find('#findpw-id').prop('readonly', true);
-			jqueryMap.$findPwForm.show();
-			jqueryMap.$findPwForm.find('#findpw-ans').focus();
-			jqueryMap.$findPwForm.find('#findpw-qst').html(data.qst);
+			jqueryMap.$answerChkForm.show();
+			jqueryMap.$answerChkForm.find('#findpw-ans').focus();
+			jqueryMap.$answerChkForm.find('#findpw-qst').html(data.qst);
 		});
 		result.fail(function () {
 			alert('아이디가 없습니다.');
@@ -2748,32 +2846,32 @@ zp.modal = (function () {
 		var
 			data = {
 				id : jqueryMap.$findIdForm.find('#findpw-id').val(),
-				ans: jqueryMap.$findPwForm.find('#findpw-ans').val()
+				ans: jqueryMap.$answerChkForm.find('#findpw-ans').val()
 			},
 			result;
 		e.preventDefault();
 		if (!data.ans) {
 			alert('답변을 입력해주세요');
-			jqueryMap.$findPwForm.find('#findpw-ans').focus();
+			jqueryMap.$answerChkForm.find('#findpw-ans').focus();
 		}
 		result = zp.model.checkAnswer(data);
 		result.done(function () {
-			jqueryMap.$newPwForm.show();
-			jqueryMap.$newPwForm.find('#findpw-newpw').focus();
+			jqueryMap.$newPassForm.show();
+			jqueryMap.$newPassForm.find('#findpw-newpw').focus();
 		});
 		result.fail(function (err) {
 			if (err === 'wrong answer') {
 				alert('답변이 틀렸습니다.');
-				jqueryMap.$findPwForm.find('#findpw-ans').val('').focus();
+				jqueryMap.$answerChkForm.find('#findpw-ans').val('').focus();
 			}
 		});
 	};
 	onNewPassword = function (e) {
-		e.preventDefault();
 		var
-			$newpw = jqueryMap.$newPwForm.find('#findpw-newpw'),
-			$newpwchk = jqueryMap.$newPwForm.find('#findpw-newpwchk'),
+			$newpw = jqueryMap.$newPassForm.find('#findpw-newpw'),
+			$newpwchk = jqueryMap.$newPassForm.find('#findpw-newpwchk'),
 			data, result;
+		e.preventDefault();
 		data = {
 			id: jqueryMap.$findIdForm.find('#findpw-id').val(),
 			pw: $newpw.val()
@@ -2822,7 +2920,7 @@ zp.modal = (function () {
 	};
 	checkRegEmail = function (e) {
 		var regEmail = /^[\-A-Za-z0-9_]+[\-A-Za-z0-9_.]*@[\-A-Za-z0-9_]+[\-A-Za-z0-9_.]*\.[A-Za-z]{2,5}$/,
-			email = e.hasOwnProperty('data') ? e.data.value : e;
+			email = e || $(this).val();
 		if (e.hasOwnProperty('data') && email === '') { // 블러로 접근하고 빈칸일 때
 			return false;
 		}
@@ -2855,7 +2953,7 @@ zp.modal = (function () {
 				ans   : $ans.val(),
 				avatar: 'z'
 			},
-			result;
+			result, spinner;
 		e.preventDefault();
 		if (!data.id.trim()) {
 			alert('아이디를 입력해주세요.');
@@ -2902,34 +3000,19 @@ zp.modal = (function () {
 		}
 		result = zp.model.join(data);
 		result.done(function (res) {
+			$(spinner.el).remove();
 			console.log(res);
 			alert('회원이 되신 것을 축하드립니다!');
 		});
 		result.fail(function (err) {
+			$(spinner.el).remove();
 			console.log(err);
 			alert('오류가 발생했습니다. 다시 시도해주세요.');
 		});
+		spinner = new Spinner().spin();
+		jqueryMap.$container.append(spinner.el);
 	};
-	onRepeat = function () {
-		$(this).next().toggle();
-	};
-	onToggleRepeatType = function () {
-		var $weekBox = $('.plan-repeat-everyweek'),
-			$checkboxDay = $weekBox.find('input[name=repeat-day]');
-		if ($(this).val() === 'everyday') {
-			$checkboxDay.prop('checked', true);
-			$weekBox.hide();
-		} else if ($(this).val() === 'everyweek') {
-			$checkboxDay.prop('checked', false);
-			$weekBox.show();
-		}
-	};
-	onSetStartdate = function () {
-		var $enddate = $(this).parent().find('#plan-input-enddate');
-		if ($enddate.val() === '') {
-			$enddate.val($(this).val());
-		}
-	};
+	// search
 	onSearch = function (e) {
 		var
 			dateStr = $(this).prev('#search-date').val(),
@@ -2969,8 +3052,43 @@ zp.modal = (function () {
 		jqueryMap.$container.empty().hide();
 	};
 	// submit
+	onRepeat = function () {
+		$(this).next().toggle();
+	};
+	onToggleRepeatType = function () {
+		var $weekBox = $('#plan-repeat-everyweek'),
+			$monthBox = $('#plan-repeat-everymonth'),
+			$checkboxDay = $weekBox.find('input[name=repeat-day]');
+		if ($(this).val() === 'everyday') {
+			$checkboxDay.prop('checked', true);
+			$weekBox.hide();
+		} else if ($(this).val() === 'everyweek') {
+			$checkboxDay.prop('checked', false);
+			$weekBox.show();
+		} else if ($(this).val() === 'everymonth') {
+			$checkboxDay.prop('checked', false);
+			$monthBox.show();
+		}
+	};
+	onSetStartdate = function () {
+		// todo: 더 정확하게 수정
+		var $enddate = $(this).parent().find('#plan-input-enddate');
+		if ($enddate.val() === '') {
+			$enddate.val($(this).val());
+		}
+	};
 	makeRandom = function () {
 		return ('0000' + Math.floor(Math.random() * 10000 + 1)).slice(-5);
+	};
+	onNoDue = function () {
+		var chekced = $(this).is(':checked');
+		if (chekced) {
+			jqueryMap.$container.find('#todo-input-date').prop('disabled', true);
+			jqueryMap.$container.find('#todo-input-time').prop('disabled', true);
+		} else {
+			jqueryMap.$container.find('#todo-input-date').prop('disabled', false);
+			jqueryMap.$container.find('#todo-input-time').prop('disabled', false);
+		}
 	};
 	onSubmitTodo = function (e) {
 		var
@@ -2978,17 +3096,14 @@ zp.modal = (function () {
 			date = $form.find('#todo-input-date').val(),
 			time = $form.find('#todo-input-time').val(),
 			text = $form.find('#todo-input-text').val(),
-			nodue = $form.find('#todo-input-nodue').is(':checked'),
+			dateless = $form.find('#todo-input-dateless').is(':checked'),
 			data, result;
 		e.preventDefault();
 		if (date === "" || time === "" || text === "") {
 			alert('빈칸이 있습니다.');
 			return false;
 		}
-		if (nodue === true) {
-			date = 'nodue';
-			time = 'nodue';
-		}
+
 		data = {
 			_id : new Date(date + ' ' + time).getTime() + makeRandom(),
 			date: date,
@@ -2997,6 +3112,11 @@ zp.modal = (function () {
 			done: false,
 			type: 'todo'
 		};
+		if (dateless === true) {
+			data.date = 'dateless';
+			data.time = 'dateless';
+			data._id = new Date().getTime() + makeRandom();
+		}
 		result = zp.model.setTodo(data);
 		result.done(function () {
 			jqueryMap.$container.empty().hide();
@@ -3045,97 +3165,103 @@ zp.modal = (function () {
 		};
 		tempData = $.extend({}, data);
 		dataList.push(tempData);
-		if ($form.find('#plan-input-repeat').is(':checked')) { // 반복이 있을 시
-			data.num = $form.find('#plan-input-number').val();
-			data.lastdate = $form.find('#plan-input-lastdate').val();
-			data.day = $form.find('input[name="repeat-day"]:checked').map(function () {
-				return parseInt($(this).val(), 10);
-			}).get();
-			obj = zp.calendar.objectify(data.startdate);
-			curDay = new Date(obj.year, obj.month - 1, obj.date).getDay();
-			dayLen = data.day.length;
-			for (i = 0; i < dayLen; i++) {
-				if (curDay === data.day[i]) {
-					index = i;
-					break;
+		if ($form.find('#plan-input-repeat').is(':checked')) { // 매일 또는 매주 반복이 있을 시
+			if ($form.find('#repeat-type-everymonth').is(':selected')) {
+				data.week = $form.find('input[name="repeat-month"]:checked').map(function () {
+					return parseInt($(this).val(), 10);
+				}).get();
+			} else {
+				data.num = $form.find('#plan-input-number').val();
+				data.lastdate = $form.find('#plan-input-lastdate').val();
+				data.day = $form.find('input[name="repeat-day"]:checked').map(function () {
+					return parseInt($(this).val(), 10);
+				}).get();
+				obj = zp.calendar.objectify(data.startdate);
+				curDay = new Date(obj.year, obj.month - 1, obj.date).getDay();
+				dayLen = data.day.length;
+				for (i = 0; i < dayLen; i++) {
+					if (curDay === data.day[i]) {
+						index = i;
+						break;
+					}
 				}
-			}
-			tempArray = data.day.slice(0, index);
-			data.day = data.day.slice(index, dayLen).concat(tempArray);
-			data.day = data.day.map(function (item, idx) {
-				var	gap,
-					nextDay = data.day[idx + 1] || data.day[0];
-				gap = nextDay - item;
-				if (gap < 0) {
-					gap += 7;
-				}
-				return gap;
-			});
-			if (data.lastdate) {
-				stime = new Date(data.startdate + ' ' + data.starttime);
-				lastdate = new Date(data.lastdate + ' 00:00:00');
-				while (stime.getTime() < lastdate.getTime()) {
-					console.log(stime.toISOString(), lastdate.toISOString());
+				tempArray = data.day.slice(0, index);
+				data.day = data.day.slice(index, dayLen).concat(tempArray);
+				data.day = data.day.map(function (item, idx) {
+					var gap,
+						nextDay = data.day[idx + 1] || data.day[0];
+					gap = nextDay - item;
+					if (gap < 0) {
+						gap += 7;
+					}
+					return gap;
+				});
+				if (data.lastdate) {
 					stime = new Date(data.startdate + ' ' + data.starttime);
-					stime.setDate(stime.getDate() + (data.day[i % dayLen]));
-					smonth = ('0' + (stime.getMonth() + 1)).slice(-2);
-					sdate = ('0' + stime.getDate()).slice(-2);
-					shour = ('0' + stime.getHours()).slice(-2);
-					smin = ('0' + stime.getMinutes()).slice(-2);
-					etime = new Date(data.enddate + ' ' + data.endtime);
-					etime.setDate(etime.getDate() + (data.day[i % dayLen]));
-					emonth = ('0' + (etime.getMonth() + 1)).slice(-2);
-					edate = ('0' + etime.getDate()).slice(-2);
-					ehour = ('0' + etime.getHours()).slice(-2);
-					emin = ('0' + etime.getMinutes()).slice(-2);
-					o = Object.create(data);
-					o.text = data.text;
-					o.type = 'plan';
-					o.plan_idx = data.plan_idx;
-					o._id = stime.getTime() + makeRandom();
-					data.startdate = o.startdate = stime.getFullYear() + '-' + smonth + '-' + sdate;
-					data.starttime = o.starttime = shour + ':' + smin;
-					data.enddate = o.enddate = etime.getFullYear() + '-' + emonth + '-' + edate;
-					data.endtime = o.endtime = ehour + ':' + emin;
-					dataList.push(o);
+					lastdate = new Date(data.lastdate + ' 00:00:00');
+					while (stime.getTime() < lastdate.getTime()) {
+						console.log(stime.toISOString(), lastdate.toISOString());
+						stime = new Date(data.startdate + ' ' + data.starttime);
+						stime.setDate(stime.getDate() + (data.day[i % dayLen]));
+						smonth = ('0' + (stime.getMonth() + 1)).slice(-2);
+						sdate = ('0' + stime.getDate()).slice(-2);
+						shour = ('0' + stime.getHours()).slice(-2);
+						smin = ('0' + stime.getMinutes()).slice(-2);
+						etime = new Date(data.enddate + ' ' + data.endtime);
+						etime.setDate(etime.getDate() + (data.day[i % dayLen]));
+						emonth = ('0' + (etime.getMonth() + 1)).slice(-2);
+						edate = ('0' + etime.getDate()).slice(-2);
+						ehour = ('0' + etime.getHours()).slice(-2);
+						emin = ('0' + etime.getMinutes()).slice(-2);
+						o = Object.create(data);
+						o.text = data.text;
+						o.type = 'plan';
+						o.plan_idx = data.plan_idx;
+						o._id = stime.getTime() + makeRandom();
+						data.startdate = o.startdate = stime.getFullYear() + '-' + smonth + '-' + sdate;
+						data.starttime = o.starttime = shour + ':' + smin;
+						data.enddate = o.enddate = etime.getFullYear() + '-' + emonth + '-' + edate;
+						data.endtime = o.endtime = ehour + ':' + emin;
+						dataList.push(o);
+					}
 				}
-			}
-			if (data.num) {
-				for (i = 0; i < data.num; i++) {
-					stime = new Date(data.startdate + ' ' + data.starttime);
-					stime.setDate(stime.getDate() + (data.day[i % dayLen]));
-					smonth = ('0' + (stime.getMonth() + 1)).slice(-2);
-					sdate = ('0' + stime.getDate()).slice(-2);
-					shour = ('0' + stime.getHours()).slice(-2);
-					smin = ('0' + stime.getMinutes()).slice(-2);
-					etime = new Date(data.enddate + ' ' + data.endtime);
-					etime.setDate(etime.getDate() + (data.day[i % dayLen]));
-					emonth = ('0' + (etime.getMonth() + 1)).slice(-2);
-					edate = ('0' + etime.getDate()).slice(-2);
-					ehour = ('0' + etime.getHours()).slice(-2);
-					emin = ('0' + etime.getMinutes()).slice(-2);
-					o = Object.create(data);
-					o.text = data.text;
-					o.type = 'plan';
-					o.plan_idx = data.plan_idx;
-					o._id = stime.getTime() + makeRandom();
-					data.startdate = o.startdate = stime.getFullYear() + '-' + smonth + '-' + sdate;
-					data.starttime = o.starttime = shour + ':' + smin;
-					data.enddate = o.enddate = etime.getFullYear() + '-' + emonth + '-' + edate;
-					data.endtime = o.endtime = ehour + ':' + emin;
-					console.log(o.text, o.plan, o);
-					dataList.push(o);
-				}
-			}
+				if (data.num) {
+					for (i = 0; i < data.num; i++) {
+						stime = new Date(data.startdate + ' ' + data.starttime);
+						stime.setDate(stime.getDate() + (data.day[i % dayLen]));
+						smonth = ('0' + (stime.getMonth() + 1)).slice(-2);
+						sdate = ('0' + stime.getDate()).slice(-2);
+						shour = ('0' + stime.getHours()).slice(-2);
+						smin = ('0' + stime.getMinutes()).slice(-2);
+						etime = new Date(data.enddate + ' ' + data.endtime);
+						etime.setDate(etime.getDate() + (data.day[i % dayLen]));
+						emonth = ('0' + (etime.getMonth() + 1)).slice(-2);
+						edate = ('0' + etime.getDate()).slice(-2);
+						ehour = ('0' + etime.getHours()).slice(-2);
+						emin = ('0' + etime.getMinutes()).slice(-2);
+						o = Object.create(data);
+						o.text = data.text;
+						o.type = 'plan';
+						o.plan_idx = data.plan_idx;
+						o._id = stime.getTime() + makeRandom();
+						data.startdate = o.startdate = stime.getFullYear() + '-' + smonth + '-' + sdate;
+						data.starttime = o.starttime = shour + ':' + smin;
+						data.enddate = o.enddate = etime.getFullYear() + '-' + emonth + '-' + edate;
+						data.endtime = o.endtime = ehour + ':' + emin;
+						console.log(o.text, o.plan, o);
+						dataList.push(o);
+					}
+				} // end data.num
+			} // end else
 		}
 		console.log(dataList);
-		result = zp.model.setPlan(dataList);
-		result.done(function (data) {
-			console.log(data);
-			jqueryMap.$container.empty().hide();
-			$.gevent.publish('submit', ['plan']);
-			console.log('plan registered', data);
-		});
+		//result = zp.model.setPlan(dataList);
+		//result.done(function (data) {
+		//	console.log(data);
+		//	jqueryMap.$container.empty().hide();
+		//	$.gevent.publish('submit', ['plan']);
+		//	console.log('plan registered', data);
+		//});
 		return false;
 	};
 	onSubmitDday = function (e) {
@@ -3178,58 +3304,64 @@ zp.modal = (function () {
 		});
 	};
 	initModule = function ($container, state, data) {
+		var dateStr;
 		if (typeof state !== 'string') {
 			throw "initModule argument type error";
 		}
 		if (state === '') {
 			state = 'login';
 		}
-		$container.load('/html/zp.modal.html #modal-' + state, function () {
-			stateMap.$container = $container;
-			setJqueryMap($container);
-			if (data) {
-				if (state === 'todo' || state === 'plan' || state === 'dday') {
-					var dataStr;
-					data.month = (data.month < 10) ? ('0' + data.month) : data.month;
-					data.date = (data.date < 10) ? ('0' + data.date) : data.date;
-					dataStr = data.year + '-' + data.month + '-' + data.date;
-					data.time = (data.time.length === 4) ? '0' + data.time : data.time;
-					if (state === 'todo') {
-						$container.find('#todo-input-date').val(dataStr);
-						$container.find('#todo-input-time').val(data.time);
-					} else if (state === 'plan') {
-						$container.find('#plan-input-startdate').val(dataStr);
-						$container.find('#plan-input-starttime').val(data.time);
-					} else if (state === 'dday') {
-						$container.find('.dday-input-target').val(dataStr);
-					}
+		$container.html($('#zp-' + state).html());
+		$('body').css({
+			height: $container.height(),
+			overflow: 'hidden'
+		});
+		stateMap.$container = $container;
+		setJqueryMap($container);
+		if (data) {
+			if (state === 'type') {
+				$container.find('h2').html(data.year + '-' + data.month + '-' + data.date + ' ' + data.time);
+			}
+			if (state === 'todo-modal' || state === 'plan-modal' || state === 'dday-modal') {
+				data.month = (data.month < 10) ? ('0' + data.month) : data.month;
+				data.date = (data.date < 10) ? ('0' + data.date) : data.date;
+				dateStr = data.year + '-' + data.month + '-' + data.date;
+				data.time = (data.time.length === 4) ? '0' + data.time : data.time;
+				if (state === 'todo-modal') {
+					$container.find('#todo-input-date').val(dateStr);
+					$container.find('#todo-input-time').val(data.time);
+				} else if (state === 'plan-modal') {
+					$container.find('#plan-input-startdate').val(dateStr);
+					$container.find('#plan-input-starttime').val(data.time);
+				} else if (state === 'dday-modal') {
+					$container.find('.dday-input-target').val(dateStr);
 				}
 			}
-			$(document).on('blur', '#join-email', {value: $(this).val()}, checkRegEmail);
-			jqueryMap.$close.on('click', onClickClose);
-			jqueryMap.$login.on('click', onLogin);
-			jqueryMap.$repeat.on('click', onRepeat);
-			jqueryMap.$todo.on('click', data, onSubmitTodo);
-			jqueryMap.$plan.on('click', data, onSubmitPlan);
-			jqueryMap.$dday.on('click', data, onSubmitDday);
-			jqueryMap.$plan.parent().find('#plan-input-startdate').on('blur', onSetStartdate);
-			jqueryMap.$typeTodo.on('click', data, onTypeTodo);
-			jqueryMap.$typePlan.on('click', data, onTypePlan);
-			jqueryMap.$typeDday.on('click', data, onTypeDday);
-			jqueryMap.$join.on('click', onClickJoin);
-			jqueryMap.$back.on('click', onClickBack);
-			jqueryMap.$joinSbmt.on('click', onJoin);
-			jqueryMap.$checkIdBtn.on('click', onCheckId);
-			jqueryMap.$findpw.on('click', onFindPassword);
-			jqueryMap.$findIdBtn.on('click', onFindId);
-			jqueryMap.$findPwBtn.on('click', onCheckAnswer);
-			jqueryMap.$newPwBtn.on('click', onNewPassword);
-			jqueryMap.$offline.on('click', onOffline);
-			jqueryMap.$search.on('click', onSearch);
-			jqueryMap.$today.on('click', toToday);
-			jqueryMap.$repeatType.on('change', onToggleRepeatType);
-			return $container;
-		});
+		}
+		$(document).on('blur', '#join-email', checkRegEmail);
+		jqueryMap.$closeBtn.on('click', onClickClose);
+		jqueryMap.$loginSbmt.on('click', onLogin);
+		jqueryMap.$repeat.on('click', onRepeat);
+		jqueryMap.$todoSbmt.on('click', data, onSubmitTodo);
+		jqueryMap.$planSbmt.on('click', data, onSubmitPlan);
+		jqueryMap.$ddaySbmt.on('click', data, onSubmitDday);
+		jqueryMap.$datelessChkbx.on('click', onNoDue);
+		jqueryMap.$planSbmt.parent().find('#plan-input-startdate').on('blur', onSetStartdate);
+		jqueryMap.$typeTodo.on('click', data, onTypeTodo);
+		jqueryMap.$typePlan.on('click', data, onTypePlan);
+		jqueryMap.$typeDday.on('click', data, onTypeDday);
+		jqueryMap.$joinBtn.on('click', onClickJoin);
+		jqueryMap.$backBtn.on('click', onClickBack);
+		jqueryMap.$joinSbmt.on('click', onJoin);
+		jqueryMap.$checkIdBtn.on('click', onCheckId);
+		jqueryMap.$findPassBtn.on('click', onFindPassword);
+		jqueryMap.$findIdBtn.on('click', onFindId);
+		jqueryMap.$answerChkBtn.on('click', onCheckAnswer);
+		jqueryMap.$newPassBtn.on('click', onNewPassword);
+		jqueryMap.$offlineBtn.on('click', onOffline);
+		jqueryMap.$search.on('click', onSearch);
+		jqueryMap.$today.on('click', toToday);
+		jqueryMap.$repeatType.on('change', onToggleRepeatType);
 		return $container;
 	};
 	return {
@@ -3240,52 +3372,50 @@ zp.modal = (function () {
 zp.month = (function () {
 	var
 		configMap = {
-			settable_map  : {
+			settable_map: {
 				set_cur_anchor: true
 			},
 			set_cur_anchor: null
 		},
 		stateMap = {
-			month_list: []
+			monthList: [],
+			monthMap: {}
 		},
 		jqueryMap = {},
-		configModule, initModule, setJqueryMap, insertCalendar, insertPlan,
-		onClickDate, onClickWeek, Month;
-	Month = function ($container, data) {
-		var month = data.month,
-			year = data.year,
-			date_str;
-		$container.load('/html/zp.month.html', function () {
-			if (month < 10) { month = '0' + month; }
-			date_str = String(year) + month;
-			console.log('month', date_str);
-			setJqueryMap($container, date_str);
-			insertCalendar(data.month, data.year);
-			jqueryMap[date_str].$month.attr('data-date', date_str);
-			jqueryMap[date_str].$month.find('td').on('click', data, onClickDate);
-			jqueryMap[date_str].$month.find('tbody th').on('click', data, onClickWeek);
-		});
+		configModule, initModule, Month;
+	Month = function ($container, data, dateStr) {
+		this.month = parseInt(data.month, 10);
+		this.year = parseInt(data.year, 10);
+		this.dateStr = dateStr;
+		this.initiate($container, data);
 	};
-	setJqueryMap = function ($container, str) {
-		jqueryMap.$container = $container;
+	Month.prototype.initiate = function ($container, data) {
+		$container.html($('#zp-month').html());
+		console.log('month', this.dateStr);
+		this.setJqueryMap($container, this.dateStr);
+		this.insertCalendar(data.month, data.year);
+		jqueryMap[this.dateStr].$month.attr('data-date', this.dateStr);
+		jqueryMap[this.dateStr].$month.find('td').on('click', data, this.onClickDate);
+		jqueryMap[this.dateStr].$month.find('tbody th').on('click', data, this.onClickWeek);
+	};
+	Month.prototype.setJqueryMap = function ($container, str) {
 		jqueryMap[str] = {
 			$month: $container.find('.month-calendar')
 		};
 	};
-	insertCalendar = function (month, year) {
+	Month.prototype.insertCalendar = function (month, year) {
 		var
 			option = {
 				month: month,
-				year : year
-			},
-			str;
-		month = (month < 10) ? '0' + month : month;
-		str = String(year) + month;
-		zp.calendar.initModule(jqueryMap[str].$month, option);
-		insertPlan(str);
+				year: year
+			};
+		zp.calendar.initModule(jqueryMap[this.dateStr].$month, option);
+		this.insertPlan(this.dateStr);
+		stateMap.monthList.push(this.dateStr);
+		stateMap.monthMap[this.dateStr] = jqueryMap[this.dateStr].$container;
 		return true;
 	};
-	insertPlan = function (str) {
+	Month.prototype.insertPlan = function (str) {
 		var
 			todoMap, ddayMap, planObj, startTime, endTime, time, dateStr,
 			i, target, year, month, date, $td, idx, due, $obj, todoResult, planResult, ddayResult,
@@ -3397,7 +3527,7 @@ zp.month = (function () {
 		});
 		return true;
 	};
-	onClickWeek = function (e) {
+	Month.prototype.onClickWeek = function (e) {
 		var
 			week = parseInt(('0' + parseInt($(this).html(), 10)).slice(-2), 10),
 			year = e.data.year,
@@ -3406,7 +3536,7 @@ zp.month = (function () {
 			return false;
 		}
 		if (week === '0') {
-			year = --year;
+			year--;
 			week = zp.calendar.getWeekNum(31, 12, year);
 		}
 		data = {
@@ -3415,37 +3545,36 @@ zp.month = (function () {
 		};
 		$.gevent.publish('week', [data]);
 	};
-	onClickDate = function (e) {
+	Month.prototype.onClickDate = function (e) {
 		var
 			date = parseInt($(this).find('div').eq(0).text(), 10),
 			month = e.data.month,
 			year = e.data.year,
 			data;
-		if (date == '') {
+		if (isNaN(date)) {
 			return;
 		}
 		data = {
-			date : date,
+			date: date,
 			month: month,
-			year : year
+			year: year
 		};
 		$.gevent.publish('day', [data]);
 	};
 	configModule = function (input_map) {
 		zp.util.setConfigMap({
-			input_map   : input_map,
+			input_map: input_map,
 			settable_map: configMap.settable_map,
-			config_map  : configMap
+			config_map: configMap
 		});
 	};
 	initModule = function ($container, data) {
 		var dateStr = data.year + ('0' + data.month).slice(-2);
-		stateMap.month_list[dateStr] = new Month($container, data);
-		return $container;
+		return new Month($container, data, dateStr);
 	};
 	return {
 		configModule: configModule,
-		initModule  : initModule
+		initModule: initModule
 	};
 }());
 zp.plan = (function () {
@@ -3467,15 +3596,16 @@ zp.plan = (function () {
 	setJqueryMap = function ($container) {
 		jqueryMap = {
 			$container: $container,
-			$main     : $container.find('.plan-main')
+			$main: $container.find('#plan-main')
 		};
 	};
 	showPlan = function () {
-		var planMap, startdate, starttime, enddate, endtime, i, result,
+		var planMap, startdate, starttime, enddate, endtime, i, result, spinner,
 			startStr, endStr, $div, $option, $del, $alarm, $text, $start, $end,
 			$frag = $(document.createDocumentFragment());
 		result = zp.model.getPlan();
 		result.done(function (planList) {
+			$(spinner.el).remove();
 			if (planList.length) {
 				jqueryMap.$main.html('');
 				for (i = 0; i < planList.length; i++) {
@@ -3487,10 +3617,10 @@ zp.plan = (function () {
 						endtime = planMap.endtime;
 						startStr = startdate + ' ' + starttime;
 						endStr = enddate + ' ' + endtime;
-						$div = $('<div/>').addClass('plan-item').attr('data-id', planMap._id);
+						$div = $('<div/>').addClass('plan-item').attr('data-id', planMap._id).attr('data-pid', planMap.plan_idx);
 						$option = $('<div/>').addClass('plan-option');
-						$del = $('<div/>').addClass('plan-del').html('<i class="fa fa-trash-o"></i>');
-						$alarm = $('<div/>"').addClass('plan-alarm').html('<i class="fa fa-alarm"></i>');
+						$del = $('<div/>').addClass('item-del').html('<i class="fa fa-trash-o"></i>');
+						$alarm = $('<div/>').addClass('item-alarm').html('<i class="fa fa-alarm"></i>');
 						$text = $('<div/>').addClass('plan-text').text(planMap.text);
 						$start = $('<div/>').addClass('plan-start').text(startStr);
 						$end = $('<div/>').addClass('plan-end').text(endStr);
@@ -3502,23 +3632,43 @@ zp.plan = (function () {
 				jqueryMap.$main.append($frag);
 			}
 		});
-		jqueryMap.$main.html('<div class="no-content">일정을 작성해주세요</div>');
+		result.fail(function (err) {
+			$(spinner.el).remove();
+			if (err === 'not_found') {
+				jqueryMap.$main.html('<div class="no-content">일정을 작성해주세요</div>');
+			} else {
+				alert(err);
+			}
+		});
+		spinner = new Spinner().spin();
+		jqueryMap.$main.append(spinner.el);
 	};
 	onDelete = function () {
 		var
 			$item = $(this).closest('.plan-item'),
-			id = $item.data('id'), result;
-		if (!confirm('삭제하시겠습니까?')) {
-			return false;
+			id = $item.data('id'),
+			pid = $item.data('pid'),
+			$plans = $item.parent().find('[data-pid=' + pid + ']'),
+			result;
+		if (confirm('정말 삭제하시겠습니까?')) {
+			if (confirm('이 종류의 일정을 모두 삭제하시겠습니까?')) {
+				result = zp.model.deletePlans(pid);
+				result.done(function () {
+					$plans.remove();
+				});
+				result.fail(function (err) {
+					console.log(err);
+				});
+				return;
+			}
+			result = zp.model.deleteItem(id);
+			result.done(function () {
+				$item.remove();
+			});
+			result.fail(function () {
+				alert('오류 발생');
+			});
 		}
-		result = zp.model.deleteItem(id);
-		result.done(function () {
-			$item.remove();
-		});
-		result.fail(function () {
-			alert('오류 발생');
-		});
-		return true;
 	};
 	holdTap = function (e) {
 		console.log('holdtap');
@@ -3644,14 +3794,13 @@ zp.plan = (function () {
 		});
 	};
 	initModule = function ($container) {
-		$container.load('/html/zp.plan.html', function () {
-			stateMap.$container = $container;
-			setJqueryMap($container);
-			showPlan();
-			jqueryMap.$main.on('click', '.plan-del', onDelete);
-			jqueryMap.$main.on('touchstart', '.plan-text, .plan-start, .plan-end', holdTap);
-			jqueryMap.$main.on('touchend', '.plan-text, .plan-start, .plan-end', holdStop);
-		});
+		$container.html($('#zp-plan').html());
+		stateMap.$container = $container;
+		setJqueryMap($container);
+		showPlan();
+		jqueryMap.$main.on('click', '.item-del', onDelete);
+		jqueryMap.$main.on('touchstart', '.plan-text, .plan-start, .plan-end', holdTap);
+		jqueryMap.$main.on('touchend', '.plan-text, .plan-start, .plan-end', holdStop);
 	};
 	return {
 		configModule: configModule,
@@ -3659,94 +3808,142 @@ zp.plan = (function () {
 	};
 }());
 zp.todo = (function () {
-    'use strict';
-    var
-        configMap = {
-            settable_map: {
-                set_cur_anchor: true
-            },
-            set_cur_anchor: null
-        },
-        stateMap = {
-            $container: null
-        },
-        jqueryMap = {},
-        setJqueryMap, showTodo, configModule, initModule, onCheck, onDelete, setAlarm,
-        updateTime, updateText, holdTap, holdStop, applyTime, applyText, isMobile;
-
-    setJqueryMap = function ($container) {
-        jqueryMap = {
-            $container: $container,
-            $main: $container.find('.todo-main')
-        };
-    };
-    showTodo = function () {
-        var
-            $due, $text, $check, $div, $del, $alarm, $option, checked, todoMap,
-            dateStr, date, time, i, result,
-            $frag = $(document.createDocumentFragment());
-        result = zp.model.getTodo();
-        result.done(function (todoList) {
-            console.log(todoList);
-            if (todoList.length) {
-                jqueryMap.$main.html('');
-                for (i = 0; i < todoList.length; i++) {
-                    todoMap = todoList[i];
-                    console.log(todoMap);
-                    if (todoMap) {
-                        date = todoMap.date;
-                        time = todoMap.time;
-                        checked = todoMap.done;
-                        dateStr = date + ' ' + time;
-                        $div = $('<div/>').addClass('todo-item').attr('data-id', todoMap._id);
-                        $check = $('<div/>').addClass('todo-done').append('<input type="checkbox" size="3">');
-                        $option = $('<div/>').addClass('todo-option');
-                        $del = $('<div/>').addClass('todo-del').html('<i class="fa fa-trash-o"></i>');
-                        $alarm = $('<div/>').addClass('todo-alarm').html('<i class="fa fa-bell-o"></i>');
-                        $text = $('<div/>').addClass('todo-text').text(todoMap.text);
-                        $due = $('<div/>').addClass('todo-due').text(dateStr);
-                        if (new Date(dateStr).getTime() < new Date().getTime()) {
-                            $text.addClass('item-due');
-                        }
-                        if (checked) {
-                            $check.find('input').prop('checked', true);
-                            $text.addClass('item-done');
-                        }
-                        $option.append($del).append($alarm);
-                        $div.append($check).append($text).append($option).append($due);
-                        $frag.append($div);
-                    }
-                }
-                jqueryMap.$main.append($frag);
-            }
-        });
-        result.fail(function (err) {
-            alert(err);
-        });
-        jqueryMap.$main.html('<div class="no-content">할일을 작성해주세요</div>');
-        return true;
-    };
-
-    onCheck = function () {
-        var $text = $(this).parent().next(),
-            id = $(this).closest('.todo-item').data('id');
-        if ($(this).is(':checked')) {
-            $(this).prop('checked', true);
-            $text.addClass('item-done');
-			zp.model.todoToggle(id, true);
-        } else {
-            $(this).prop('checked', false);
-            $text.removeClass('item-done');
-            zp.model.todoToggle(id, false);
-        }
-        return true;
-    };
-
-    onDelete = function () {
-        var
-            $item = $(this).closest('.todo-item'),
-            id = $item.data('id'),
-            result;
+	'use strict';
+	var
+		configMap = {
+			settable_map: {
+				set_cur_anchor: true
+			},
+			set_cur_anchor: null
+		},
+		stateMap = {
+			$container: null
+		},
+		jqueryMap = {},
+		setJqueryMap, display, configModule, initModule, onCheck, onDelete, setAlarm,
+		updateTime, updateText, holdTap, holdStop, applyTime, applyText, isMobile, onClickCaret;
+	setJqueryMap = function ($container) {
+		jqueryMap = {
+			$container: $container,
+			$main: $container.find('#todo-main'),
+			$dateless: $container.find('#todo-dateless'),
+			$normal: $container.find('#todo-normal')
+		};
+	};
+	display = function () {
+		var
+			$due, $text, $check, $div, $del, $alarm, $option, checked, todoMap,
+			dateStr, date, time, i, todoResult, spinner, datelessResult,
+			$frag = $(document.createDocumentFragment()),
+			$fragg = $frag.clone();
+		datelessResult = zp.model.getTodo('dateless');
+		datelessResult.done(function (todoList) {
+			$(spinner.el).remove();
+			if (todoList.length) {
+				$frag.append('<div class="subheader"><i class="fa fa-caret-down"></i>무기한</div>').append('<div/>');
+				for (i = 0; i < todoList.length; i++) {
+					todoMap = todoList[i];
+					if (todoMap) {
+						date = todoMap.date;
+						time = todoMap.time;
+						checked = todoMap.done;
+						dateStr = date + ' ' + time;
+						$div = $('<div/>').addClass('dateless-item').attr('data-id', todoMap._id);
+						$check = $('<div/>').addClass('dateless-done').append('<input type="checkbox" size="3">');
+						$del = $('<div/>').addClass('item-del').html('<i class="fa fa-trash-o"></i>');
+						$option = $('<div/>').addClass('dateless-option').append($del);
+						$text = $('<div/>').addClass('dateless-text').text(todoMap.text);
+						$div.append($check).append($text).append($option).append($due);
+						$frag.find('div').eq(1).append($div);
+					}
+				}
+				jqueryMap.$dateless.append($frag);
+			}
+		});
+		datelessResult.fail(function (err) {
+			$(spinner.el).remove();
+			if (err === 'not_found') {
+				jqueryMap.$dateless.html('<div class="no-content">할일을 작성해주세요</div>');
+			} else {
+				alert(err);
+			}
+		});
+		todoResult = zp.model.getTodo();
+		todoResult.done(function (todoList) {
+			$(spinner.el).remove();
+			if (todoList.length) {
+				$fragg.append('<div class="subheader"><i class="fa fa-caret-down"></i>할일들</div>').append('<div/>');
+				for (i = 0; i < todoList.length; i++) {
+					todoMap = todoList[i];
+					if (todoMap) {
+						date = todoMap.date;
+						time = todoMap.time;
+						checked = todoMap.done;
+						dateStr = date + ' ' + time;
+						$div = $('<div/>').addClass('todo-item').attr('data-id', todoMap._id);
+						$check = $('<div/>').addClass('todo-done').append('<input type="checkbox" size="3">');
+						$del = $('<div/>').addClass('item-del').html('<i class="fa fa-trash-o"></i>');
+						$alarm = $('<div/>').addClass('item-alarm').html('<i class="fa fa-bell-o"></i>');
+						$option = $('<div/>').addClass('todo-option').append($del).append($alarm);
+						$text = $('<div/>').addClass('todo-text').text(todoMap.text);
+						$due = $('<div/>').addClass('todo-due').text(dateStr);
+						if (new Date(dateStr).getTime() < new Date().getTime()) {
+							$text.addClass('item-due');
+						}
+						if (checked) {
+							$check.find('input').prop('checked', true);
+							$text.addClass('item-done');
+						}
+						$div.append($check).append($text).append($option).append($due);
+						$fragg.find('div').eq(1).append($div);
+					}
+				}
+				jqueryMap.$normal.append($fragg);
+			}
+		});
+		todoResult.fail(function (err) {
+			$(spinner.el).remove();
+			if (err === 'not_found') {
+				jqueryMap.$normal.html('<div class="no-content">할일을 작성해주세요</div>');
+			} else {
+				alert(err);
+			}
+		});
+		spinner = new Spinner().spin();
+		jqueryMap.$main.append(spinner.el);
+		return true;
+	};
+	onClickCaret = function () {
+		var $this = $(this);
+		if ($this.hasClass('fa-caret-down')) {
+			$this.parent().next().hide();
+			$this.removeClass('fa-caret-down');
+			$this.addClass('fa-caret-right');
+		} else if ($this.hasClass('fa-caret-right')) {
+			$this.parent().next().show();
+			$this.addClass('fa-caret-down');
+			$this.removeClass('fa-caret-right');
+		}
+	};
+	onCheck = function () {
+		var $text = $(this).parent().next(),
+			id = $(this).closest('.todo-item').data('id');
+		if ($(this).is(':checked')) {
+			$(this).prop('checked', true);
+			$text.addClass('item-done');
+			zp.model.updateItem(id, {'done': true});
+		} else {
+			$(this).prop('checked', false);
+			$text.removeClass('item-done');
+			zp.model.updateItem(id, {'done': false});
+		}
+		return true;
+	};
+	onDelete = function () {
+		var
+			$item = $(this).closest('.todo-item'),
+			id = $item.data('id'),
+			result;
 		if (!confirm('삭제하시겠습니까?')) {
 			return false;
 		}
@@ -3758,144 +3955,139 @@ zp.todo = (function () {
 			alert('오류 발생');
 		});
 		return true;
-    };
-
-    isMobile = function () {
-        var ht = {
-            Android: /Android/,
-            iOS: /like Mac OS X/
-        }, os, key;
-        for (key in ht) {
-            if (ht.hasOwnProperty(key) && ht[key].test(navigator.userAgent)) {
-                os = key;
-            }
-        }
-        return (os === 'Android' || os === 'iOS');
-    };
-
-    setAlarm = function () {
-        if (isMobile()) {
-            // todo: 모바일일 때 알람 구현
-            alert('준비중입니다');
-            return false;
-        }
-        alert('모바일에서만 가능한 기능입니다');
-        return false;
-    };
-
-    holdTap = function (e) {
-        console.log('holdtap');
-        e.stopImmediatePropagation();
-        stateMap.taphold = setTimeout(function () {
-            if (e.target.className === 'todo-text') {
-                updateText(e.target);
-            } else if (e.target.className === 'todo-due') {
-                updateTime(e.target);
-            }
-        }, 1000);
-        return false;
-    };
-
-    holdStop = function (e) {
-        console.log('holdstop');
-        e.stopPropagation();
-        clearTimeout(stateMap.taphold);
-        return false;
-    };
-
-    updateTime = function (target) {
-        var time = $(target).text();
-        $(target).empty().append('<input type="text" value="' + time + '"/>');
-        $(target).find('input').focus().on('blur', {
-            target: target,
-            origin: time
-        }, applyTime);
-    };
-
-    updateText = function (target) {
-        var text = $(target).text();
-        $(target).empty().append('<input type="text" value="' + text + '"/>');
-        $(target).find('input').focus().on('blur', {
-            target: target,
-            origin: text
-        }, applyText);
-    };
-
-    applyTime = function (e) {
-        var data = e.data,
-            $target = $(data.target),
-            update = $target.find('input').val(),
-            change_obj, todo_list, cidx, date, time;
-        if (data.origin === update) {
-            $target.empty().text(data.origin);
-            return;
-        }
-        $target.empty().text(update);
-        change_obj = JSON.parse(localStorage.change);
-        todo_list = JSON.parse(localStorage.todo);
-        cidx = $target.parent('.todo-item').data('idx');
-        date = update.substr(0, 10);
-        time = update.substr(11, 8);
-        alert(cidx);
-        todo_list[cidx].date = date;
-        todo_list[cidx].time = time;
-        change_obj.u.push({
-            cidx: cidx,
-            type: 'todo'
-        });
-        localStorage.todo = JSON.stringify(todo_list);
-        localStorage.change = JSON.stringify(change_obj);
-    };
-
-    applyText = function (e) {
-        var data = e.data,
-            $target = $(data.target),
-            update = $target.find('input').val(),
-            change_obj, todo_list, cidx;
-        if (data.origin === update) {
-            $target.empty().text(data.origin);
-            return;
-        }
-        $target.empty().text(update);
-        change_obj = JSON.parse(localStorage.change);
-        todo_list = JSON.parse(localStorage.todo);
-        cidx = $target.parent('.todo-item').data('idx');
-        alert(cidx);
-        todo_list[cidx].text = update;
-        change_obj.u.push({
-            cidx: cidx,
-            type: 'todo'
-        });
-        localStorage.todo = JSON.stringify(todo_list);
-        localStorage.change = JSON.stringify(change_obj);
-    };
-
-    configModule = function (input_map) {
-        zp.util.setConfigMap({
-            input_map: input_map,
-            settable_map: configMap.settable_map,
-            config_map: configMap
-        });
-    };
-
-    initModule = function ($container) {
-        $container.load('/html/zp.todo.html', function () {
-            stateMap.$container = $container;
-            setJqueryMap($container);
-            showTodo();
-            jqueryMap.$main.on('click', 'input[type=checkbox]', onCheck);
-            jqueryMap.$main.on('click', '.todo-del', onDelete);
-            jqueryMap.$main.on('click', '.todo-alarm', setAlarm);
-            jqueryMap.$main.on('touchstart', '.todo-text, .todo-due', holdTap);
-            jqueryMap.$main.on('touchend', '.todo-text, .todo-due', holdStop);
-        });
-        return $container;
-    };
-
-    return {
-        configModule: configModule,
-        initModule: initModule
-    };
+	};
+	isMobile = function () {
+		var ht = {
+			Android: /Android/,
+			iOS: /like Mac OS X/
+		}, os, key;
+		for (key in ht) {
+			if (ht.hasOwnProperty(key) && ht[key].test(navigator.userAgent)) {
+				os = key;
+			}
+		}
+		return (os === 'Android' || os === 'iOS');
+	};
+	setAlarm = function () {
+		if (isMobile()) {
+			var $this = $(this);
+			var id = $item.data('id');
+			if ($this.hasClass('set')) { // 이미 설정되어 있을 경우
+				cordova.plugins.notification.local.cancel(id, function () {
+					// Notification was cancelled
+				});
+				$this.removeClass('set');
+				$this.css('color', 'silver');
+			} else {
+				var $item = $this.closest('.todo-item');
+				var text = $item.find('.todo-text').text();
+				var date = $item.find('.todo-due').text();
+				cordova.plugins.notification.local.schedule({
+					id: id,
+					text: text,
+					at: new Date(date),
+					sound: 'sound.mp3'
+				});
+				$this.addClass('set');
+				$this.css('color', 'black');
+				console.log(new Date().getTime(), new Date(date).getTime());
+			}
+			return false;
+		}
+		alert('모바일에서만 가능한 기능입니다');
+		return false;
+	};
+	holdTap = function (e) {
+		console.log('holdtap');
+		stateMap.taphold = setTimeout(function () {
+			if (e.target.className === 'todo-text') {
+				updateText(e.target);
+			} else if (e.target.className === 'todo-due') {
+				updateTime(e.target);
+			}
+		}, 1000);
+		return false;
+	};
+	holdStop = function () {
+		console.log('holdstop');
+		clearTimeout(stateMap.taphold);
+		return false;
+	};
+	updateTime = function (target) {
+		var time = $(target).text();
+		$(target).empty().append('<input type="text" value="' + time + '"/>');
+		$(target).find('input').focus().on('blur', {
+			target: target,
+			origin: time
+		}, applyTime);
+	};
+	applyTime = function (e) {
+		var data = e.data,
+			$target = $(data.target),
+			update = $target.find('input').val(),
+			id = $target.parent('.todo-item').data('idx'),
+			date, time, result;
+		if (data.origin === update) {
+			$target.empty().text(data.origin);
+			return;
+		}
+		$target.empty().text(update);
+		date = update.substr(0, 10);
+		time = update.substr(11, 8);
+		result = zp.model.updateItem(id, {'date': date, 'time': time});
+		result.fail(function (err) {
+			console.log(err);
+		});
+	};
+	updateText = function (target) {
+		var text = $(target).text();
+		$(target).empty().append('<input type="text" value="' + text + '"/>');
+		$(target).find('input').focus().on('blur', {
+			target: target,
+			origin: text
+		}, applyText);
+	};
+	applyText = function (e) {
+		var data = e.data,
+			$target = $(data.target),
+			text = $target.find('input').val(),
+			id = $target.parent('.todo-item').data('id'),
+			result;
+		if (data.origin === text) {
+			$target.empty().text(data.origin);
+			return;
+		}
+		$target.empty().text(text);
+		result = zp.model.updateItem(id, {'text': text});
+		result.fail(function (err) {
+			console.log('todo update fail', err);
+		});
+	};
+	configModule = function (input_map) {
+		zp.util.setConfigMap({
+			input_map: input_map,
+			settable_map: configMap.settable_map,
+			config_map: configMap
+		});
+	};
+	initModule = function ($container) {
+		$container.html($('#zp-todo').html());
+		stateMap.$container = $container;
+		setJqueryMap($container);
+		display();
+		jqueryMap.$main.on('click', 'input[type=checkbox]', onCheck);
+		jqueryMap.$main.on('click', '.subheader i.fa', onClickCaret);
+		jqueryMap.$main.on('click', '.item-del', onDelete);
+		jqueryMap.$main.on('click', '.item-alarm', setAlarm);
+		jqueryMap.$main.on('touchstart', '.todo-text, .todo-due', holdTap);
+		jqueryMap.$main.on('touchmove', '.todo-text, .todo-due', holdStop);
+		jqueryMap.$main.on('touchend', '.todo-text, .todo-due', holdStop);
+		return $container;
+	};
+	return {
+		configModule: configModule,
+		initModule: initModule
+	};
 }());
 zp.week = (function () {
 	var
@@ -3907,51 +4099,49 @@ zp.week = (function () {
 			tr_h: 30
 		},
 		stateMap = {
-			week_list: []
+			weekList: [],
+			weekMap: {}
 		},
 		jqueryMap = {},
-		configModule, initModule, setJqueryMap, insertDate, insertPlan,
-		onClickDate, Week;
-
-	Week = function ($container, data) {
-		var week = data.week,
-			year = data.year,
-			dateStr;
-		$container.load('/html/zp.week.html', function () {
-			dateStr = year + ('0' + week).slice(-2);
-			setJqueryMap($container, dateStr);
-			insertDate(week, year);
-			jqueryMap[dateStr].$week.attr('data-week', dateStr);
-			jqueryMap[dateStr].$thead.on('click', data, onClickDate);
-		});
+		configModule, initModule, Week;
+	Week = function ($container, data, dateStr) {
+		this.week = parseInt(data.week, 10);
+		this.year = parseInt(data.year, 10);
+		this.dateStr = dateStr;
+		this.initiate($container, data);
 	};
-
-	setJqueryMap = function ($container, str) {
-		jqueryMap.$container = $container;
+	Week.prototype.initiate = function ($container, data) {
+		$container.html($('#zp-week').html());
+		this.setJqueryMap($container, this.dateStr);
+		this.insertDate(this.week, this.year);
+		jqueryMap[this.dateStr].$week.attr('data-week', this.dateStr);
+		jqueryMap[this.dateStr].$thead.on('click', data, this.onClickDate);
+	};
+	Week.prototype.setJqueryMap = function ($container, str) {
 		jqueryMap[str] = {
 			$week: $container.find('.week-table'),
 			$thead: $container.find('thead th'),
 			$info: $container.find('.week-info')
 		};
 	};
-
-	insertDate = function (week, year) {
+	Week.prototype.insertDate = function (week, year) {
 		var
 			str = year + ('0' + week).slice(-2),
 			list = zp.calendar.getWeekDay(week, year),
 			i = 0,
-			dateStr;
+			mdStr;
 		for (i; i < 7; i++) {
-			dateStr = list[i].month + '.' + list[i].date;
-			jqueryMap[str].$thead.eq(i).text(dateStr);
+			mdStr = list[i].month + '.' + list[i].date;
+			jqueryMap[str].$thead.eq(i).text(mdStr);
 		}
-		insertPlan(str);
+		this.insertPlan(this.dateStr);
+		stateMap.weekList.push(this.dateStr);
+		stateMap.weekMap[this.dateStr] = jqueryMap[this.dateStr].$container;
 		return true;
 	};
-
-	insertPlan = function (str) {
+	Week.prototype.insertPlan = function (str) {
 		var
-			todoMap, ddayMap, planMap, top, todoResult, planResult, ddayResult, dateString,
+			todoMap, ddayMap, planMap, top, datelessResult, todoResult, planResult, ddayResult, dateString,
 			i, j, month, date, left, hour, min, $div, $tr, startTime, endTime, time, dateStr,
 			cyear = parseInt(str.substr(0, 4), 10),
 			cweek = parseInt(str.substr(4, 2), 10),
@@ -3961,6 +4151,7 @@ zp.week = (function () {
 		startTime = time.getTime();
 		time.setDate(time.getDate() + 7);
 		endTime = time.getTime();
+		datelessResult = zp.model.getTodo('dateless');
 		todoResult = zp.model.getTodo(startTime + '00000', endTime + '00000');
 		planResult = zp.model.getPlan(startTime + '00000', endTime + '00000');
 		ddayResult = zp.model.getDday(startTime + '00000', endTime + '00000');
@@ -3991,7 +4182,7 @@ zp.week = (function () {
 				todoMap = todoList[i];
 				if (todoMap) {
 					for (j = 0; j < 7; j++) {
-		 				month = ('0' + dateList[j].month).slice(-2);
+						month = ('0' + dateList[j].month).slice(-2);
 						date = ('0' + dateList[j].date).slice(-2);
 						dateString = cyear + '-' + month + '-' + date;
 						if (todoMap.date === dateString) {
@@ -4000,7 +4191,7 @@ zp.week = (function () {
 							top = hour * configMap.tr_h + min * configMap.tr_h / 60 + 61;
 							console.log('top', top);
 							$div = $('<div/>').addClass('week-todo').attr('data-id', todoMap._id);
-							 if (todoMap.done) {
+							if (todoMap.done) {
 								$div.addClass('week-done');
 							} else if (new Date(todoMap.date).getTime() < new Date().getTime()) {
 								$div.addClass('week-due');
@@ -4010,9 +4201,9 @@ zp.week = (function () {
 								.find('div').addClass('input').text(todoMap.text);
 							$div.appendTo(jqueryMap[str].$week);
 						}
-					}					
-				} 
-			}	
+					}
+				}
+			}
 		});
 		todoResult.fail(function (err) {
 			console.log(err);
@@ -4022,8 +4213,8 @@ zp.week = (function () {
 			for (i = 0; i < planList.length; i++) {
 				planMap = planList[i];
 				if (planMap) {
-	 				for (j = 0; j < 7; j++) {
-		 				month = ('0' + dateList[j].month).slice(-2);
+					for (j = 0; j < 7; j++) {
+						month = ('0' + dateList[j].month).slice(-2);
 						date = ('0' + dateList[j].date).slice(-2);
 						dateString = cyear + '-' + month + '-' + date;
 						stime = new Date(planMap.startdate).getTime();
@@ -4041,10 +4232,14 @@ zp.week = (function () {
 									height = etop - top;
 								} else {
 									height = configMap.tr_h * 24 - top;
-								}								
+								}
 								$div = $('<div/>').addClass('week-plan').attr('data-idx', i);
 								left = 14.285714 * j + '%';
-								$div.css({top: top, left: left, height: height}).append($('<div/>'))
+								$div.css({
+									top: top,
+									left: left,
+									height: height
+								}).append($('<div/>'))
 									.find('div').addClass('input').text(planMap.text);
 								$div.appendTo(jqueryMap[str].$week);
 							} else if (stime < ctime && ctime < etime) {
@@ -4054,25 +4249,28 @@ zp.week = (function () {
 								hour = planMap.endtime.substr(0, 2);
 								min = planMap.endtime.substr(3, 2);
 								top = 0;
-								left = 14.285714 * j + '%' ;
+								left = 14.285714 * j + '%';
 								height = hour * configMap.tr_h + min * configMap.tr_h / 60 + 61;
 								$div = $('<div/>').addClass('week-plan').attr('data-idx', i);
-								$div.css({top: top, left: left, height: height}).append($('<div/>'))
+								$div.css({
+									top: top,
+									left: left,
+									height: height
+								}).append($('<div/>'))
 									.find('div').addClass('input').text(planMap.text);
-								$div.appendTo(jqueryMap[str].$week);					
+								$div.appendTo(jqueryMap[str].$week);
 							}
 						}
 					}
-				} 
-			}	
+				}
+			}
 		});
 		planResult.fail(function (err) {
 			console.log(err);
 		});
 		return true;
-	};	
-
-	onClickDate = function (e) {
+	};
+	Week.prototype.onClickDate = function (e) {
 		var
 			text = $(this).text(),
 			date = parseInt(text.split('.')[1], 10),
@@ -4080,7 +4278,7 @@ zp.week = (function () {
 			year = e.data.year,
 			data;
 		if (date === '') {
-			return;	
+			return;
 		}
 		data = {
 			date: date,
@@ -4089,7 +4287,6 @@ zp.week = (function () {
 		};
 		$.gevent.publish('day', [data]);
 	};
-
 	configModule = function (input_map) {
 		zp.util.setConfigMap({
 			input_map: input_map,
@@ -4097,14 +4294,10 @@ zp.week = (function () {
 			config_map: configMap
 		});
 	};
-
 	initModule = function ($container, data) {
 		var dateStr = data.year + ('0' + data.week).slice(-2);
-		stateMap.week_list[dateStr] = new Week($container, data);
-
-		return stateMap.week_list;
+		return new Week($container, data, dateStr);
 	};
-
 	return {
 		configModule: configModule,
 		initModule: initModule
@@ -4120,24 +4313,25 @@ zp.year = (function () {
 			set_cur_anchor: null
 		},
 		stateMap = {
-			$container: null,
-			year_list: []
+			yearMap: {},
+			yearList: []
 		},
 		jqueryMap = {},
-		initModule, setJqueryMap, configModule, insertCalendar, onClickTable, Year;
-
+		initModule, configModule, Year, loadCache;
 	Year = function ($container, data) {
-		$container.load('/html/zp.year.html', function () {
-			console.log(data.year);
-			setJqueryMap($container, data.year);
-			insertCalendar(data.year);
-			jqueryMap[data.year].$calendar.on('click', data, onClickTable);
-		});
+		this.year = data.year;
+		this.initiate($container);
 	};
-
-	insertCalendar = function (year) {
+	Year.prototype.initiate = function ($container) {
+		$container.html($('#zp-year').html());
+		this.setJqueryMap($container, this.year);
+		this.insertCalendar(this.year);
+		jqueryMap[this.year].$calendar.on('click', this.year, this.onClickTable);
+	};
+	Year.prototype.insertCalendar = function (year) {
 		var
-			$container, i = 0,
+			$container,
+			i = 0,
 			option = {
 				year: year
 			};
@@ -4146,26 +4340,26 @@ zp.year = (function () {
 			option.month = parseInt($container.data('month'), 10);
 			zp.calendar.initModule($container, option);
 		}
+		stateMap.yearList.push(year);
+		stateMap.yearMap[year] = jqueryMap[year].$container;
 	};
-
-	setJqueryMap = function ($container, str) {
-		jqueryMap.$container = $container;
+	Year.prototype.setJqueryMap = function ($container, str) {
 		jqueryMap[str] = {
 			$calendar: $container.find('.year-calendar')
 		};
 	};
-	
-	onClickTable = function (e) {
+	Year.prototype.onClickTable = function (e) {
 		var
 			month = $(this).data('month'),
-			year = e.data.year,
+			year = e.data,
 			data = {
 				month: month,
 				year: year
 			};
 		$.gevent.publish('month', [data]);
 	};
-
+	loadCache = function () {
+	};
 	configModule = function (input_map) {
 		zp.util.setConfigMap({
 			input_map: input_map,
@@ -4173,13 +4367,15 @@ zp.year = (function () {
 			config_map: configMap
 		});
 	};
-
 	initModule = function ($container, data) {
 		data.year = parseInt(data.year, 10);
-		stateMap.$container = $container;
-		stateMap.year_list[data.year] = new Year($container, data);
+		if (stateMap.yearList[data.year]) {
+			alert('already here!');
+			$container.replaceWith(stateMap.yearMap[data.year].$container);
+		} else {
+			return new Year($container, data);
+		}
 	};
-		
 	return {
 		configModule: configModule,
 		initModule: initModule

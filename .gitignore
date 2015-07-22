@@ -47,3 +47,8 @@ public/vendor
 public/.sass-cache
 backup
 node_modules
+views/indexDev.jade
+views/layoutDev.jade
+appDev.js
+public/plugins
+npm-debug.log

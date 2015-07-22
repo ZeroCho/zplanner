@@ -1,0 +1,16 @@
+CACHE MANIFEST
+#zplanner-0.3.0
+
+CACHE:
+http://fonts.googleapis.com/earlyaccess/nanumgothic.css
+favicon.ico
+vendor/font-awesome/css/font-awesome.min.css
+vendor/jquery/dist/jquery.min.js
+vendor/js/jquery.uriAnchor-1.2.1.js
+vendor/js/jquery.event.gevent-1.0.2.js
+vendor/pouchdb/dist/pouchdb.min.js
+vendor/dustjs-linkedin/dist/dust-full.min.js
+vendor/spin.js/spin.min.js
+vendor/font-awesome/fonts/fontawesome-webfont.woff2
+NETWORK:
+*

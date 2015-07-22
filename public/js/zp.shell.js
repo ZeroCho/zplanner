@@ -17,39 +17,40 @@ zp.shell = (function () {
 		configMap = {
 			anchor_schema_map: {
 				current: {
-					year : true,
+					year: true,
 					month: true,
-					week : true,
-					day  : true,
-					plan : true,
-					todo : true,
-					dday : true
+					week: true,
+					day: true,
+					plan: true,
+					todo: true,
+					dday: true
 				},
-				date   : true
+				date: true
 			},
-			today            : {
-				year : new Date().getFullYear(),
+			today: {
+				year: new Date().getFullYear(),
 				month: new Date().getMonth() + 1,
-				date : new Date().getDate(),
-				week : zp.calendar.getWeekNum(new Date().getDate(), new Date().getMonth() + 1),
-				day  : new Date().getDay()
+				date: new Date().getDate(),
+				week: zp.calendar.getWeekNum(new Date().getDate(), new Date().getMonth() + 1),
+				day: new Date().getDay()
 			},
-			day              : ['일', '월', '화', '수', '목', '금', '토']
+			day: ['일', '월', '화', '수', '목', '금', '토']
 		},
 		stateMap = {
 			$container: null,
 			anchor_map: {},
-			current   : 'day',
-			act       : 'reload',
-			date_info : {
-				year : configMap.today.year,
+			current: 'day',
+			act: 'reload',
+			date_info: {
+				year: configMap.today.year,
 				month: configMap.today.month,
-				date : configMap.today.date,
-				week : configMap.today.week,
-				day  : configMap.today.day
+				date: configMap.today.date,
+				week: configMap.today.week,
+				day: configMap.today.day
 			},
-			state     : 'static',
-			fidx      : 0
+			state: 'static',
+			fidx: 0,
+			container_height: 960
 		},
 		jqueryMap = {},
 	// menu function
@@ -63,30 +64,32 @@ zp.shell = (function () {
 	// content function
 		initModule, setJqueryMap, initMain, initDay, initWeek, initMonth, initYear, toggleMain,
 	// swipe function
-		onSwipe, initPosition, setPosition, getDirection, onTouchend, onTouchmove, onTouchstart;
+		onSwipe, initPosition, setPosition, getDirection, onTouchend, onTouchmove, onTouchstart,
+	// misc
+		onError, adjustHeight;
 	setJqueryMap = function ($container) {
 		jqueryMap = {
 			$container: $container,
-			$header   : $container.find('header'),
-			$user     : $container.find('.user'),
-			$avatar   : $container.find('.avatar'),
-			$info     : $container.find('.info'),
-			$name     : $container.find('.name'),
-			$menu     : $container.find('.menu'),
-			$logout   : $container.find('#menu-logout'),
-			$profile  : $container.find('#menu-profile'),
-			$upload   : $container.find('#menu-upload'),
-			$download : $container.find('#menu-download'),
-			$option   : $container.find('#menu-option'),
-			$report   : $container.find('#menu-report'),
-			$main     : $container.find('main'),
-			$flickView: $container.find('.flick-view'),
-			$flickCon : $container.find('.flick-con'),
-			$flick    : $container.find('.flick-panel'),
-			$toggle   : $container.find('.tool-toggle'),
-			$search   : $container.find('.tool-search'),
-			$modal    : $container.find('.modal'),
-			$intro    : $container.find('.intro')
+			$header: $container.find('header'),
+			$user: $container.find('.user'),
+			$avatar: $container.find('.avatar'),
+			$info: $container.find('.info'),
+			$name: $container.find('.name'),
+			$menu: $container.find('.menu'),
+			$logout: $container.find('#menu-logout'),
+			$profile: $container.find('#menu-profile'),
+			$upload: $container.find('#menu-upload'),
+			$download: $container.find('#menu-download'),
+			$option: $container.find('#menu-option'),
+			$report: $container.find('#menu-report'),
+			$main: $container.find('main'),
+			$flickView: $container.find('#flick-view'),
+			$flickCon: $container.find('#flick-con'),
+			$flickPanel: $container.find('.flick-panel'),
+			$toggle: $container.find('.tool-toggle'),
+			$search: $container.find('.tool-search'),
+			$modal: $container.find('.modal'),
+			$intro: $container.find('.intro')
 		};
 	};
 	initDay = function (e, data) {
@@ -137,100 +140,109 @@ zp.shell = (function () {
 		var tempData = {};
 		console.log('현재 mod: ' + mod);
 		data.week = data.week || zp.calendar.getWeekNum(data.date, data.month, data.year);
-		zp[mod].initModule(jqueryMap.$flick.eq(0), data);
-		if (mod === 'day') {
-			tempData = zp.calendar.getNextDate(data);
-			zp.day.initModule(jqueryMap.$flick.eq(1), tempData);
-			tempData = zp.calendar.getPrevDate(data);
-			zp.day.initModule(jqueryMap.$flick.eq(2), tempData);
-		} else if (mod === 'week') {
-			tempData.week = data.week + 1;
-			tempData.year = data.year;
-			if (tempData.week === 54) {
-				tempData.week = 1;
-				tempData.year += 1;
-			}
-			zp.week.initModule(jqueryMap.$flick.eq(1), tempData);
-			tempData.week = data.week - 1;
-			if (tempData.week === 0) {
-				tempData.week = 53;
-				tempData.year -= 1;
-			}
-			zp.week.initModule(jqueryMap.$flick.eq(2), tempData);
-		} else if (mod === 'month') {
-			tempData = {
-				year : data.year,
-				month: data.month + 1
-			};
-			if (tempData.month === 13) {
-				tempData.month = 1;
-				tempData.year += 1;
-			}
-			zp.month.initModule(jqueryMap.$flick.eq(1), tempData);
-			tempData = {
-				year : data.year,
-				month: data.month - 1
-			};
-			if (tempData.month === 0) {
-				tempData.month = 12;
-				tempData.year -= 1;
-			}
-			zp.month.initModule(jqueryMap.$flick.eq(2), tempData);
-		} else if (mod === 'year') {
-			tempData = {
-				year: data.year + 1
-			};
-			zp.year.initModule(jqueryMap.$flick.eq(1), tempData);
-			tempData = {
-				year: data.year - 1
-			};
-			zp.year.initModule(jqueryMap.$flick.eq(2), tempData);
+		zp[mod].initModule(jqueryMap.$flickPanel.eq(0), data);
+		switch (mod) {
+			case 'day':
+				tempData = zp.calendar.getNextDate(data);
+				zp.day.initModule(jqueryMap.$flickPanel.eq(1), tempData);
+				tempData = zp.calendar.getPrevDate(data);
+				zp.day.initModule(jqueryMap.$flickPanel.eq(2), tempData);
+				break;
+			case 'week':
+				tempData.week = data.week + 1;
+				tempData.year = data.year;
+				if (tempData.week === 54) {
+					tempData.week = 1;
+					tempData.year += 1;
+				}
+				zp.week.initModule(jqueryMap.$flickPanel.eq(1), tempData);
+				tempData.week = data.week - 1;
+				if (tempData.week === 0) {
+					tempData.week = 53;
+					tempData.year -= 1;
+				}
+				zp.week.initModule(jqueryMap.$flickPanel.eq(2), tempData);
+				break;
+			case 'month':
+				tempData = {
+					year: data.year,
+					month: data.month + 1
+				};
+				if (tempData.month === 13) {
+					tempData.month = 1;
+					tempData.year += 1;
+				}
+				zp.month.initModule(jqueryMap.$flickPanel.eq(1), tempData);
+				tempData = {
+					year: data.year,
+					month: data.month - 1
+				};
+				if (tempData.month === 0) {
+					tempData.month = 12;
+					tempData.year -= 1;
+				}
+				zp.month.initModule(jqueryMap.$flickPanel.eq(2), tempData);
+				break;
+			case 'year':
+				tempData = {
+					year: data.year + 1
+				};
+				zp.year.initModule(jqueryMap.$flickPanel.eq(1), tempData);
+				tempData = {
+					year: data.year - 1
+				};
+				zp.year.initModule(jqueryMap.$flickPanel.eq(2), tempData);
+				break;
+			default:
+				throw 'initMain error!';
 		}
 		stateMap.current = mod;
 		initPosition();
 		setTitle(data);
 	};
 	setTitle = function (data) {
-		var title_str = '',
-			style_str = '',
+		var titleStr = '',
+			styleStr = '',
 			cur = stateMap.current;
 		switch (cur) {
 			case 'day':
 				if (data.day === 0) {
-					style_str = 'style="color:yellow;"';
+					styleStr = 'style="color:yellow;"';
 				} else if (data.day === 6) {
-					style_str = 'style="color:blue;"';
+					styleStr = 'style="color:blue;"';
 				}
-				title_str = '<span class="title-year">' + data.year
+				titleStr = '<span class="title-year">' + data.year
 					+ '</span>.<span class="title-month">' + data.month
 					+ '</span>.<span class="title-date">' + data.date
-					+ '</span> <span class="title-day" ' + style_str + '>'
+					+ '</span> <span class="title-day" ' + styleStr + '>'
 					+ configMap.day[data.day] + '</span> <span class="title-week">'
 					+ data.week + '주차</span>';
 				break;
 			case 'week':
 				data.week = data.week || zp.calendar.getWeekNum(data.date, data.month, data.year);
-				title_str = '<span class="title-year">' + data.year
+				titleStr = '<span class="title-year">' + data.year
 					+ '</span>년 <span class="title">' + data.week + '주차</span>';
 				break;
 			case 'month':
-				title_str = '<span class="title-year">' + data.year
+				titleStr = '<span class="title-year">' + data.year
 					+ '년</span> <span class="title">' + data.month + '월</span>';
 				break;
 			case 'year':
-				title_str = '<span class="title">' + data.year + '년</span>';
+				titleStr = '<span class="title">' + data.year + '년</span>';
 				break;
 			case 'todo':
-				title_str = '<span class="title">할일</span>';
+				titleStr = '<span class="title">할일</span>';
 				break;
 			case 'plan':
-				title_str = '<span class="title">일정</span>';
+				titleStr = '<span class="title">일정</span>';
 				break;
 			case 'dday':
-				title_str = '<span class="title">D-day / 기념일</span>';
+				titleStr = '<span class="title">D-day / 기념일</span>';
 				break;
+			default:
+				throw 'setTitle Error!';
 		}
-		jqueryMap.$info.html(title_str);
+		jqueryMap.$info.html(titleStr);
 		if (data) {
 			if (data.hasOwnProperty('date')) {
 				stateMap.date_info.date = data.date;
@@ -320,21 +332,21 @@ zp.shell = (function () {
 	};
 	onSwipe = function (direction, cur_data) {
 		var cur = stateMap.current,
-			temp_data,
-			page;
+			tempData, page;
 		stateMap.act = 'swipe';
 		cur_data.year = parseInt(cur_data.year, 10);
 		cur_data.month = parseInt(cur_data.month, 10);
 		cur_data.week = parseInt(cur_data.week, 10);
 		if (direction === 'left') { // show next
-			console.log('swiped to the left!');
+			setPosition(direction);
+			adjustHeight();
 			page = (stateMap.fidx + 1) % 3;
 			switch (cur) {
 				case 'day':
 					cur_data = setTitle(zp.calendar.getNextDate(cur_data));
 					// 다음 모듈을 미리 로드(2일 후)
-					temp_data = zp.calendar.getNextDate(cur_data);
-					zp[cur].initModule(jqueryMap.$flick.eq(page), temp_data);
+					tempData = zp.calendar.getNextDate(cur_data);
+					zp[cur].initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					// 주소는 1일 후로
 					setCurAnchor(cur, cur_data.year + ('0' + cur_data.month).slice(-2) + ('0' + cur_data.date).slice(-2));
 					break;
@@ -345,13 +357,13 @@ zp.shell = (function () {
 						cur_data.year += 1;
 					}
 					// 다음 모듈을 미리 로드(2주 후)
-					temp_data = setTitle(cur_data);
-					temp_data.week += 1;
-					if (temp_data.week === 54) {
-						temp_data.week = 1;
-						temp_data.year += 1;
+					tempData = setTitle(cur_data);
+					tempData.week += 1;
+					if (tempData.week === 54) {
+						tempData.week = 1;
+						tempData.year += 1;
 					}
-					zp.week.initModule(jqueryMap.$flick.eq(page), temp_data);
+					zp.week.initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					// 주소는 1달 후로
 					setCurAnchor('week', cur_data.year + ('0' + cur_data.week).slice(-2));
 					break;
@@ -362,13 +374,13 @@ zp.shell = (function () {
 						cur_data.year += 1;
 					}
 					// 다음 모듈을 미리 로드(2달 후)
-					temp_data = setTitle(cur_data);
-					temp_data.month += 1;
-					if (temp_data.month === 13) {
-						temp_data.month = 1;
-						temp_data.year += 1;
+					tempData = setTitle(cur_data);
+					tempData.month += 1;
+					if (tempData.month === 13) {
+						tempData.month = 1;
+						tempData.year += 1;
 					}
-					zp.month.initModule(jqueryMap.$flick.eq(page), temp_data);
+					zp.month.initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					// 주소는 1달 후로
 					setCurAnchor('month', cur_data.year + ('0' + cur_data.month).slice(-2));
 					break;
@@ -376,9 +388,9 @@ zp.shell = (function () {
 					cur_data.year += 1;
 					// 다음 모듈을 미리 로드 (2년 후)
 					cur_data = setTitle(cur_data);
-					temp_data = $.extend({}, cur_data);
-					temp_data.year += 1;
-					zp.year.initModule(jqueryMap.$flick.eq(page), temp_data);
+					tempData = $.extend({}, cur_data);
+					tempData.year += 1;
+					zp.year.initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					setCurAnchor('year', cur_data.year);
 					break;
 				case 'todo':
@@ -393,15 +405,18 @@ zp.shell = (function () {
 					stateMap.current = 'todo';
 					setTitle();
 					break;
+				default:
+					throw 'onSwipe left error!';
 			}
 		} else { // right prev
-			console.log('swiped to the right!');
+			setPosition(direction);
+			adjustHeight();
 			page = (stateMap.fidx - 1) % 3;
 			switch (cur) {
 				case 'day':
 					cur_data = setTitle(zp.calendar.getPrevDate(cur_data));
-					temp_data = zp.calendar.getPrevDate(cur_data);
-					zp[cur].initModule(jqueryMap.$flick.eq(page), temp_data);
+					tempData = zp.calendar.getPrevDate(cur_data);
+					zp[cur].initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					setCurAnchor(cur, cur_data.year + ('0' + cur_data.month).slice(-2) + ('0' + cur_data.date).slice(-2));
 					break;
 				case 'week':
@@ -411,13 +426,13 @@ zp.shell = (function () {
 						cur_data.year -= 1;
 					}
 					// 다음 모듈을 미리 로드(2주 후)
-					temp_data = setTitle(cur_data);
-					temp_data.week -= 1;
-					if (temp_data.week === 0) {
-						temp_data.week = 53;
-						temp_data.year -= 1;
+					tempData = setTitle(cur_data);
+					tempData.week -= 1;
+					if (tempData.week === 0) {
+						tempData.week = 53;
+						tempData.year -= 1;
 					}
-					zp.week.initModule(jqueryMap.$flick.eq(page), temp_data);
+					zp.week.initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					// 주소는 1달 후로
 					setCurAnchor('week', cur_data.year + ('0' + cur_data.week).slice(-2));
 					break;
@@ -427,20 +442,20 @@ zp.shell = (function () {
 						cur_data.month = 12;
 						cur_data.year -= 1;
 					}
-					temp_data = setTitle(cur_data);
-					temp_data.month -= 1;
-					if (temp_data.month === 0) {
-						temp_data.month = 12;
-						temp_data.year -= 1;
+					tempData = setTitle(cur_data);
+					tempData.month -= 1;
+					if (tempData.month === 0) {
+						tempData.month = 12;
+						tempData.year -= 1;
 					}
-					zp[cur].initModule(jqueryMap.$flick.eq(page), temp_data);
+					zp[cur].initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					setCurAnchor(cur, cur_data.year + ('0' + cur_data.month).slice(-2));
 					break;
 				case 'year':
 					cur_data.year -= 1;
-					temp_data = setTitle(cur_data);
-					temp_data.year -= 1;
-					zp[cur].initModule(jqueryMap.$flick.eq(page), temp_data);
+					tempData = setTitle(cur_data);
+					tempData.year -= 1;
+					zp[cur].initModule(jqueryMap.$flickPanel.eq(page), tempData);
 					setCurAnchor(cur, cur_data.year);
 					break;
 				case 'todo':
@@ -455,9 +470,11 @@ zp.shell = (function () {
 					stateMap.current = 'plan';
 					setTitle();
 					break;
+				default:
+					throw 'onSwipe right error!';
 			}
 		}
-		jqueryMap.$flick.eq(page).css('top', 0);
+		jqueryMap.$flickPanel.eq(page).css('top', 0);
 		stateMap.date_info = cur_data;
 		return cur_data;
 	};
@@ -479,9 +496,9 @@ zp.shell = (function () {
 		localStorage.user = JSON.stringify(user_map);
 		zp.model.configModule(user_map.name);
 		console.log('online mode');
-		if (!localStorage.first && JSON.parse(localStorage.first)) {
-			introApp();
-		}
+		//if (!localStorage.first && JSON.parse(localStorage.first)) {
+		//	introApp();
+		//}
 	};
 	onSearchDate = function () {
 		zp.modal.configModule({set_cur_anchor: setCurAnchor});
@@ -490,7 +507,6 @@ zp.shell = (function () {
 	};
 	onSubmit = function (e, data) {
 		e.preventDefault();
-		console.log('onSubmit', data);
 		setCurAnchor(data);
 	};
 	onClickCell = function (e, data) {
@@ -512,52 +528,53 @@ zp.shell = (function () {
 		return $.extend(true, {}, stateMap.anchor_map);
 	};
 	changeAnchorPart = function (arg_map) {
-		var anchor_map_revise = copyAnchorMap(),
-			bool_return = true,
-			key_name, key_name_dep;
-		for (key_name in arg_map) {
-			if (arg_map.hasOwnProperty(key_name)) {
-				if (key_name.indexOf('_') === 0) {
+		var anchorMapRevise = copyAnchorMap(),
+			boolReturn = true,
+			keyName, keyNameDep;
+		for (keyName in arg_map) {
+			if (arg_map.hasOwnProperty(keyName)) {
+				if (keyName.indexOf('_') === 0) {
 					continue;
 				}
-				anchor_map_revise[key_name] = arg_map[key_name];
-				if (arg_map[key_name] === undefined) {
-					delete arg_map[key_name];
-					delete anchor_map_revise[key_name];
+				anchorMapRevise[keyName] = arg_map[keyName];
+				if (arg_map[keyName] === undefined) {
+					delete arg_map[keyName];
+					delete anchorMapRevise[keyName];
 				}
-				key_name_dep = '_' + key_name;
-				if (arg_map[key_name_dep]) {
-					anchor_map_revise[key_name_dep] = arg_map[key_name_dep];
+				keyNameDep = '_' + keyName;
+				if (arg_map[keyNameDep]) {
+					anchorMapRevise[keyNameDep] = arg_map[keyNameDep];
 				} else {
-					delete anchor_map_revise[key_name_dep];
-					delete anchor_map_revise['_s' + key_name_dep];
+					delete anchorMapRevise[keyNameDep];
+					delete anchorMapRevise['_s' + keyNameDep];
 				}
 			}
 		}
 		try {
-			$.uriAnchor.setAnchor(anchor_map_revise);
-		} catch (error) {
+			$.uriAnchor.setAnchor(anchorMapRevise);
+		} catch (err) {
+			console.warn('changeanchorpart', err);
 			$.uriAnchor.setAnchor(stateMap.anchor_map, null, true);
-			bool_return = false;
+			boolReturn = false;
 		}
-		return bool_return;
+		return boolReturn;
 	};
 	setCurAnchor = function (status, date) {
-		var arg_map = {
+		var argMap = {
 			current: status,
-			date   : date
+			date: date
 		};
-		return changeAnchorPart(arg_map);
+		return changeAnchorPart(argMap);
 	};
 	onHashchange = function () {
 		var
 			anchorMapPrevious = copyAnchorMap(),
-			anchorMapProposed, _s_cur_previous, _s_cur_proposed, s_cur_proposed,
-			_s_date_previous, _s_date_proposed,
+			anchorMapProposed, currentStringPrevious, currentStringProposed, current,
+			dateStringPrevious, dateStringProposed,
 			data = {};
-		console.log(
+		console.info(
 			new Date().getHours(), new Date().getMinutes(),
-			new Date().getSeconds(), '해시가 변경이 시도되었습니다.'
+			new Date().getSeconds(), '해시 변경.'
 		);
 		try {
 			anchorMapProposed = $.uriAnchor.makeAnchorMap();
@@ -570,20 +587,22 @@ zp.shell = (function () {
 			anchorMapProposed.current = 'day';
 		}
 		stateMap.anchor_map = anchorMapProposed;
-		_s_date_previous = anchorMapPrevious._s_date;
-		_s_date_proposed = anchorMapProposed._s_date;
-		_s_cur_previous = anchorMapPrevious._s_current;
-		_s_cur_proposed = anchorMapProposed._s_current;
+		/** @namespace anchorMapPrevious._s_date */
+		dateStringPrevious = anchorMapPrevious._s_date;
+		dateStringProposed = anchorMapProposed._s_date;
+		/** @namespace anchorMapPrevious._s_current */
+		currentStringPrevious = anchorMapPrevious._s_current;
+		currentStringProposed = anchorMapProposed._s_current;
 		if (!Object.keys(anchorMapPrevious).length ||
-			_s_cur_previous !== _s_cur_proposed ||
-			_s_date_previous !== _s_date_proposed) {
-			s_cur_proposed = anchorMapProposed.current;
-			switch (s_cur_proposed) {
+			currentStringPrevious !== currentStringProposed ||
+			dateStringPrevious !== dateStringProposed) {
+			current = anchorMapProposed.current;
+			switch (current) {
 				case 'year':
 					if (stateMap.act === 'reload') {
-						if (_s_date_proposed) {
+						if (dateStringProposed) {
 							data.year = stateMap.date_info.year =
-								parseInt(_s_date_proposed.substr(0, 4), 10);
+								parseInt(dateStringProposed.substr(0, 4), 10);
 						}
 						initMain('year', data);
 					} else {
@@ -592,11 +611,11 @@ zp.shell = (function () {
 					break;
 				case 'month':
 					if (stateMap.act === 'reload') {
-						if (_s_date_proposed) {
+						if (dateStringProposed) {
 							data.year = stateMap.date_info.year =
-								parseInt(_s_date_proposed.substr(0, 4), 10);
+								parseInt(dateStringProposed.substr(0, 4), 10);
 							data.month = stateMap.date_info.month =
-								parseInt(_s_date_proposed.substr(4, 2), 10);
+								parseInt(dateStringProposed.substr(4, 2), 10);
 						}
 						initMain('month', data);
 					} else {
@@ -605,11 +624,11 @@ zp.shell = (function () {
 					break;
 				case 'week':
 					if (stateMap.act === 'reload') {
-						if (_s_date_proposed) {
+						if (dateStringProposed) {
 							data.year = stateMap.date_info.year =
-								parseInt(_s_date_proposed.substr(0, 4), 10);
+								parseInt(dateStringProposed.substr(0, 4), 10);
 							data.week = stateMap.date_info.week =
-								parseInt(_s_date_proposed.substr(4, 2), 10);
+								parseInt(dateStringProposed.substr(4, 2), 10);
 						}
 						initMain('week', data);
 					} else {
@@ -618,13 +637,13 @@ zp.shell = (function () {
 					break;
 				case 'day':
 					if (stateMap.act === 'reload') {
-						if (_s_date_proposed) {
+						if (dateStringProposed) {
 							data.year = stateMap.date_info.year =
-								parseInt(_s_date_proposed.substr(0, 4), 10);
+								parseInt(dateStringProposed.substr(0, 4), 10);
 							data.month = stateMap.date_info.month =
-								parseInt(_s_date_proposed.substr(4, 2), 10);
+								parseInt(dateStringProposed.substr(4, 2), 10);
 							data.date = stateMap.date_info.date =
-								parseInt(_s_date_proposed.substr(6, 2), 10);
+								parseInt(dateStringProposed.substr(6, 2), 10);
 						} else {
 							data.year = stateMap.date_info.year;
 							data.month = stateMap.date_info.month;
@@ -638,27 +657,27 @@ zp.shell = (function () {
 					}
 					break;
 				case 'plan':
-					initPosition();
-					zp.plan.initModule(jqueryMap.$flick.eq(0));
-					zp.dday.initModule(jqueryMap.$flick.eq(1));
-					zp.todo.initModule(jqueryMap.$flick.eq(2));
+					zp.plan.initModule(jqueryMap.$flickPanel.eq(0));
+					zp.dday.initModule(jqueryMap.$flickPanel.eq(1));
+					zp.todo.initModule(jqueryMap.$flickPanel.eq(2));
 					stateMap.current = 'plan';
+					initPosition();
 					setTitle();
 					break;
 				case 'todo':
-					initPosition();
-					zp.todo.initModule(jqueryMap.$flick.eq(0));
-					zp.plan.initModule(jqueryMap.$flick.eq(1));
-					zp.dday.initModule(jqueryMap.$flick.eq(2));
+					zp.todo.initModule(jqueryMap.$flickPanel.eq(0));
+					zp.plan.initModule(jqueryMap.$flickPanel.eq(1));
+					zp.dday.initModule(jqueryMap.$flickPanel.eq(2));
 					stateMap.current = 'todo';
+					initPosition();
 					setTitle();
 					break;
 				case 'dday':
-					initPosition();
-					zp.dday.initModule(jqueryMap.$flick.eq(0));
-					zp.todo.initModule(jqueryMap.$flick.eq(1));
-					zp.plan.initModule(jqueryMap.$flick.eq(2));
+					zp.dday.initModule(jqueryMap.$flickPanel.eq(0));
+					zp.todo.initModule(jqueryMap.$flickPanel.eq(1));
+					zp.plan.initModule(jqueryMap.$flickPanel.eq(2));
 					stateMap.current = 'dday';
+					initPosition();
 					setTitle();
 					break;
 				default:
@@ -669,14 +688,26 @@ zp.shell = (function () {
 		}
 	};
 	initPosition = function () {
-		jqueryMap.$main.css('height', $(window).height() - jqueryMap.$header.height());
-		jqueryMap.$flick.css('min-height', $(window).height() - jqueryMap.$header.height());
-		jqueryMap.$flick.eq(0).css('left', '0%');
-		jqueryMap.$flick.eq(1).css('left', '100%');
-		jqueryMap.$flick.eq(2).css('left', '-100%');
+		jqueryMap.$flickPanel.eq(0).css('transform', 'translate3d(100%,0,0)');
+		jqueryMap.$flickPanel.eq(1).css('transform', 'translate3d(200%,0,0)');
+		jqueryMap.$flickPanel.eq(2).css('transform', 'translate3d(0%,0,0)');
 		stateMap.fidx = 0;
+		adjustHeight();
+		console.log('init');
 	};
-	setPosition = function () {
+	adjustHeight = function () {
+		var $centerPanel = jqueryMap.$flickPanel.eq(stateMap.fidx);
+		var centerHeight = $centerPanel.height();
+		var minHeight = $(window).height() - jqueryMap.$header.height() - 1;
+		jqueryMap.$flickPanel.css({minHeight: minHeight});
+		if (centerHeight < minHeight) {
+			centerHeight = minHeight;
+			//$centerPanel.css({minHeight: minHeight});
+		}
+		console.log('adjust', $centerPanel, minHeight, centerHeight);
+		jqueryMap.$flickView.css('height', centerHeight);
+	};
+	setPosition = function (direction) {
 		var cidx, ridx, lidx;
 		stateMap.fidx %= 3;
 		cidx = stateMap.fidx;
@@ -688,79 +719,111 @@ zp.shell = (function () {
 		if (cidx === 2) {
 			ridx = 0;
 		}
-		console.log(lidx, cidx, ridx);
-		jqueryMap.$flick.eq(lidx).css({left: '-100%'});
-		jqueryMap.$flick.eq(cidx).css({left: '0%'});
-		jqueryMap.$flick.eq(ridx).css({left: '100%'});
+		if (direction === 'left') {
+			setTimeout(function () {
+				jqueryMap.$flickPanel.eq(lidx).css('transform', 'translate3d(0%,0,0)');
+				jqueryMap.$flickCon.css({
+					transform: 'translate3d(0,0,0)',
+					webkitTransition: '0ms'
+				});
+				jqueryMap.$flickPanel.eq(cidx).css('transform', 'translate3d(100%,0,0)');
+				jqueryMap.$flickPanel.eq(ridx).css('transform', 'translate3d(200%,0,0)');
+			}, 300);
+		} else if (direction === 'right') {
+			setTimeout(function () {
+				jqueryMap.$flickPanel.eq(ridx).css('transform', 'translate3d(200%,0,0)');
+				jqueryMap.$flickCon.css({
+					transform: 'translate3d(0,0,0)',
+					webkitTransition: '0ms'
+				});
+				jqueryMap.$flickPanel.eq(cidx).css('transform', 'translate3d(100%,0,0)');
+				jqueryMap.$flickPanel.eq(lidx).css('transform', 'translate3d(0%,0,0)');
+			}, 300);
+		}
 	};
 	getDirection = function (x, y) {
-		var slope = Math.abs(parseFloat((y / x).toFixed(2))), dir,
-			slope_h = ((window.innerHeight / 2) / window.innerWidth).toFixed(2),
-			slope_x = (window.innerHeight / (window.innerWidth / 2)).toFixed(2);
-		if (slope >= slope_h) {
-			dir = 2;
-		} else if (slope <= slope_x) {
-			dir = 0;
-		} else {
+		var dir,
+			standard = Math.abs(y / x) > 1;
+		if (standard) { // 세로
 			dir = 1;
+		} else { // 가로
+			dir = 0;
 		}
 		return dir;
 	};
 	onTouchstart = function (e) {
-		jqueryMap.$flickCon.css({webkitTransition: 'null'});
-		stateMap.touch_start_x = stateMap.touch_x = e.originalEvent.touches[0].clientX;
-		stateMap.touch_start_y = stateMap.touch_y = e.originalEvent.touches[0].clientY;
+		stateMap.direction = undefined;
+		stateMap.gap_x = 0;
+		jqueryMap.$flickCon.css({webkitTransition: '0ms', transition: '0ms'});
+		stateMap.touch_start_x = e.originalEvent.touches[0].clientX;
+		stateMap.touch_x = e.originalEvent.touches[0].clientX;
+		stateMap.touch_start_y = e.originalEvent.touches[0].clientY;
+		stateMap.touch_y = e.originalEvent.touches[0].clientY;
 		return true;
 	};
 	onTouchmove = function (e) {
+		jqueryMap.$flickCon.css('pointer-events', 'none');
 		stateMap.touch_x = e.originalEvent.touches[0].clientX;
 		stateMap.touch_y = e.originalEvent.touches[0].clientY;
 		stateMap.gap_x = stateMap.touch_x - stateMap.touch_start_x;
 		stateMap.gap_y = stateMap.touch_y - stateMap.touch_start_y;
 		stateMap.direction = stateMap.direction || getDirection(stateMap.gap_x, stateMap.gap_y);
-		if (stateMap.direction === 0) {
-			e.preventDefault();
-			jqueryMap.$flickCon.css({transform: 'translate3d(' + stateMap.gap_x + 'px,0,0)'});
-		}
 		stateMap.state = 'drag';
+		if (stateMap.direction === 0) { // 가로면
+			jqueryMap.$flickCon.css({
+				transform: 'translate3d(' + stateMap.gap_x + 'px,0,0)'
+			});
+			$('body').css({
+				overflow: 'hidden'
+			});
+			e.preventDefault();
+		} else { // 세로면
+			stateMap.gap_x = 0;
+		}
 	};
 	onTouchend = function () {
-		if (Math.abs(stateMap.gap_x) > $(window).width() / 2.5) {
+		var windowWidth = $(window).width();
+		$('body').css({
+			overflow: 'auto'
+		});
+		jqueryMap.$flickCon.css({
+			'pointer-events': 'auto'
+		});
+		if (Math.abs(stateMap.gap_x) > windowWidth / 2.5) {
 			if (stateMap.gap_x < 0) {
 				jqueryMap.$flickCon.css({
-					transform: 'translate3d(-100%,0,0)', webkitTransition: '300ms'
+					transform: 'translate3d(' + -windowWidth + 'px,0,0)',
+					transition: '300ms'
 				});
 				stateMap.fidx++;
 				onSwipe('left', stateMap.date_info);
 			} else {
 				jqueryMap.$flickCon.css({
-					transform: 'translate3d(100%,0,0)', webkitTransition: '300ms'
+					transform: 'translate3d(' + windowWidth + 'px,0,0)',
+					transition: '300ms'
 				});
 				stateMap.fidx--;
 				onSwipe('right', stateMap.date_info);
 			}
-			setPosition();
-			jqueryMap.$flickCon.delay(0).queue(function (next) {
-				$(this).css({
-					transform       : 'translate3d(0,0,0)',
-					webkitTransition: 'null'
-				});
-				next();
-			});
 		} else {
 			jqueryMap.$flickCon.css({
-				transform       : 'translate3d(0,0,0)',
-				webkitTransition: '200ms'
+				transform: 'translate3d(0,0,0)',
+				transition: '300ms'
 			});
 		}
-		stateMap.direction = undefined;
-		stateMap.gap_x = 0;
-		return true;
 	};
+	onError = function (errorMsg, url, lineNumber, column, errorObj) {
+		if (typeof errorMsg === 'string' && errorMsg.indexOf('Script error.') > -1) {
+			return;
+		}
+		console.log('Error: ', errorMsg, ' Script: ' + url + ' Line: ' + lineNumber + ' Column: ' + column + ' StackTrace: ' + errorObj);
+	};
+
 	initModule = function ($container) {
 		var
 			online = localStorage.online ? JSON.parse(localStorage.online) :
-				false;
+				false,
+			first = localStorage.first ? JSON.parse(localStorage.first) : false;
 		$.uriAnchor.configModule({
 			schema_map: configMap.anchor_schema_map
 		});
@@ -773,22 +836,13 @@ zp.shell = (function () {
 		} else {
 			localStorage.user = 'anon';
 		}
-		initPosition();
 		$(window)
-			.on('error', function (errorMsg, url, lineNumber, column, errorObj) {
-				if (errorMsg && errorMsg.indexOf('Script error.') > -1) {
-					return;
-				}
-				alert('Error: ' + errorMsg + ' Script: ' + url + ' Line: ' + lineNumber
-					+ ' Column: ' + column + ' StackTrace: ' + errorObj);
-			})
+			.on('error', onError)
 			.on('hashchange', onHashchange).trigger('hashchange')
-			.on('orientationchange resize', function () {
-				var windowHeight = $(window).height(),
-					headerHeight = jqueryMap.$header.height();
-				jqueryMap.$main.css('height', windowHeight - headerHeight);
-				jqueryMap.$flick.css('min-height', windowHeight - headerHeight);
-			});
+			.on('orientationchange resize', adjustHeight);
+		if (first) {
+			introApp();
+		}
 		$.gevent.subscribe(jqueryMap.$user, 'login', onLoginSuccess);
 		$.gevent.subscribe(jqueryMap.$container, 'submit', onSubmit);
 		$.gevent.subscribe(jqueryMap.$main, 'day', initDay);
@@ -796,6 +850,7 @@ zp.shell = (function () {
 		$.gevent.subscribe(jqueryMap.$main, 'month', initMonth);
 		$.gevent.subscribe(jqueryMap.$main, 'year', initYear);
 		$.gevent.subscribe(jqueryMap.$modal, 'cell', onClickCell);
+		$.gevent.subscribe(jqueryMap.$container, 'panelLoaded', adjustHeight);
 		// 이벤트 핸들러
 		jqueryMap.$user.on('click', toggleUserMenu);
 		jqueryMap.$logout.on('click', onLogoutMenu);

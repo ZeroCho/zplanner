@@ -14,14 +14,12 @@ zp.dday = (function () {
 		jqueryMap = {},
 		setJqueryMap, showDday, configModule, initModule, onDelete, calculate,
 		updateTime, updateText, holdTap, holdStop, applyTime, applyText;
-
 	setJqueryMap = function ($container) {
 		jqueryMap = {
 			$container: $container,
-			$main: $container.find('.dday-main')
+			$main: $container.find('#dday-main')
 		};
 	};
-
 	calculate = function (target) {
 		var
 			today = new Date(),
@@ -29,7 +27,7 @@ zp.dday = (function () {
 			dest = new Date(obj.year, obj.month - 1, obj.date),
 			gap = dest.getTime() - today.getTime(),
 			result
-		;
+			;
 		gap = Math.ceil(gap / 1000 / 60 / 60 / 24);
 		if (gap > 0) {
 			result = 'D-' + gap;
@@ -40,13 +38,13 @@ zp.dday = (function () {
 		}
 		return result;
 	};
-
 	showDday = function () {
 		var
-			$text, $div, $del, ddayMap, $target, $left, target, i,
+			$text, $div, $del, ddayMap, $target, $left, $option, target, i, spinner,
 			$frag = $(document.createDocumentFragment()),
 			result = zp.model.getDday();
 		result.done(function (dday_list) {
+			$(spinner.el).remove();
 			if (dday_list.length) {
 				jqueryMap.$main.html('');
 				for (i = 0; i < dday_list.length; i++) {
@@ -57,8 +55,9 @@ zp.dday = (function () {
 						$text = $('<div/>').addClass('dday-text').text(ddayMap.text);
 						$target = $('<div/>').addClass('dday-target').text(target);
 						$left = $('<div/>').addClass('dday-left').text(calculate(target));
-						$del = $('<div/>').addClass('dday-del').html('<i class="fa fa-trash-o"></i>');
-						$div.append($left).append($text).append($target).append($del);
+						$del = $('<div/>').addClass('item-del').html('<i class="fa fa-trash-o"></i>');
+						$option = $('<div/>').addClass('dday-option').append($del);
+						$div.append($left).append($text).append($target).append($option);
 						$frag.append($div);
 					}
 				}
@@ -66,12 +65,17 @@ zp.dday = (function () {
 			}
 		});
 		result.fail(function (err) {
-			alert(err);
+			$(spinner.el).remove();
+			if (err === 'not_found') {
+				jqueryMap.$main.html('<div class="no-content">기념일이나 D-day를 작성해주세요</div>');
+			} else {
+				alert(err);
+			}
 		});
-		jqueryMap.$main.html('<div class="no-content">기념일이나 D-day를 작성해주세요</div>');
+		spinner = new Spinner().spin();
+		jqueryMap.$main.append(spinner.el);
 		return true;
 	};
-
 	onDelete = function () {
 		var
 			$item = $(this).closest('.dday-item'),
@@ -88,25 +92,24 @@ zp.dday = (function () {
 		});
 		return true;
 	};
-
-	holdTap = function (e) { console.log('holdtap');
+	holdTap = function (e) {
+		console.log('holdtap');
 		e.stopImmediatePropagation();
 		stateMap.taphold = setTimeout(function () {
 			if (e.target.className === 'dday-text') {
-				updateText(e.target);	
+				updateText(e.target);
 			} else if (e.target.className === 'dday-target') {
-				updateTime(e.target);	
+				updateTime(e.target);
 			}
 		}, 1000);
 		return false;
 	};
-	
-	holdStop = function (e) { console.log('holdstop');
+	holdStop = function (e) {
+		console.log('holdstop');
 		e.stopPropagation();
 		clearTimeout(stateMap.taphold);
 		return false;
 	};
-	
 	updateTime = function (target) {
 		var time = $(target).text();
 		$(target).empty().append('<input type="text" value="' + time + '"/>');
@@ -115,7 +118,6 @@ zp.dday = (function () {
 			origin: time
 		}, applyTime);
 	};
-	
 	updateText = function (target) {
 		var text = $(target).text();
 		$(target).empty().append('<input type="text" value="' + text + '"/>');
@@ -124,21 +126,19 @@ zp.dday = (function () {
 			origin: text
 		}, applyText);
 	};
-
 	applyTime = function (e) {
 		var data = e.data,
 			$target = $(data.target),
 			update = $target.find('input').val(),
 			id, date;
 		if (data.origin === update) {
-			$target.empty().text(data.origin); 			
-			return;	
+			$target.empty().text(data.origin);
+			return;
 		}
 		$target.empty().text(update);
 		id = $target.parent('.dday-item').data('id');
 		date = update.substr(0, 10);
 	};
-	
 	applyText = function (e) {
 		var data = e.data,
 			$target = $(data.target),
@@ -159,10 +159,8 @@ zp.dday = (function () {
 			type: 'dday'
 		});
 		localStorage.dday = JSON.stringify(dday_list);
-		localStorage.change = JSON.stringify(change_obj); 		
+		localStorage.change = JSON.stringify(change_obj);
 	};
-
-
 	configModule = function (input_map) {
 		zp.util.setConfigMap({
 			input_map: input_map,
@@ -170,22 +168,19 @@ zp.dday = (function () {
 			config_map: configMap
 		});
 	};
-
 	initModule = function ($container) {
-		$container.load('/html/zp.dday.html', function () {
-			stateMap.$container = $container;
-			setJqueryMap($container);
-			showDday();
-			jqueryMap.$main.on('click', '.dday-del', onDelete);
-			jqueryMap.$main.on('touchstart', '.dday-target, .dday-text', holdTap);
-			jqueryMap.$main.on('touchend', '.dday-target, .dday-text', holdStop);
-		});
+		$container.html($('#zp-dday').html());
+		stateMap.$container = $container;
+		setJqueryMap($container);
+		showDday();
+		jqueryMap.$main.on('click', '.item-del', onDelete);
+		jqueryMap.$main.on('touchstart', '.dday-target, .dday-text', holdTap);
+		jqueryMap.$main.on('touchend', '.dday-target, .dday-text', holdStop);
 		return $container;
 	};
-
 	return {
 		configModule: configModule,
 		initModule: initModule,
-				calculate: calculate
+		calculate: calculate
 	};
 }());

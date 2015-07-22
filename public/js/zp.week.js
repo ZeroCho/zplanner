@@ -8,51 +8,49 @@ zp.week = (function () {
 			tr_h: 30
 		},
 		stateMap = {
-			week_list: []
+			weekList: [],
+			weekMap: {}
 		},
 		jqueryMap = {},
-		configModule, initModule, setJqueryMap, insertDate, insertPlan,
-		onClickDate, Week;
-
-	Week = function ($container, data) {
-		var week = data.week,
-			year = data.year,
-			dateStr;
-		$container.load('/html/zp.week.html', function () {
-			dateStr = year + ('0' + week).slice(-2);
-			setJqueryMap($container, dateStr);
-			insertDate(week, year);
-			jqueryMap[dateStr].$week.attr('data-week', dateStr);
-			jqueryMap[dateStr].$thead.on('click', data, onClickDate);
-		});
+		configModule, initModule, Week;
+	Week = function ($container, data, dateStr) {
+		this.week = parseInt(data.week, 10);
+		this.year = parseInt(data.year, 10);
+		this.dateStr = dateStr;
+		this.initiate($container, data);
 	};
-
-	setJqueryMap = function ($container, str) {
-		jqueryMap.$container = $container;
+	Week.prototype.initiate = function ($container, data) {
+		$container.html($('#zp-week').html());
+		this.setJqueryMap($container, this.dateStr);
+		this.insertDate(this.week, this.year);
+		jqueryMap[this.dateStr].$week.attr('data-week', this.dateStr);
+		jqueryMap[this.dateStr].$thead.on('click', data, this.onClickDate);
+	};
+	Week.prototype.setJqueryMap = function ($container, str) {
 		jqueryMap[str] = {
 			$week: $container.find('.week-table'),
 			$thead: $container.find('thead th'),
 			$info: $container.find('.week-info')
 		};
 	};
-
-	insertDate = function (week, year) {
+	Week.prototype.insertDate = function (week, year) {
 		var
 			str = year + ('0' + week).slice(-2),
 			list = zp.calendar.getWeekDay(week, year),
 			i = 0,
-			dateStr;
+			mdStr;
 		for (i; i < 7; i++) {
-			dateStr = list[i].month + '.' + list[i].date;
-			jqueryMap[str].$thead.eq(i).text(dateStr);
+			mdStr = list[i].month + '.' + list[i].date;
+			jqueryMap[str].$thead.eq(i).text(mdStr);
 		}
-		insertPlan(str);
+		this.insertPlan(this.dateStr);
+		stateMap.weekList.push(this.dateStr);
+		stateMap.weekMap[this.dateStr] = jqueryMap[this.dateStr].$container;
 		return true;
 	};
-
-	insertPlan = function (str) {
+	Week.prototype.insertPlan = function (str) {
 		var
-			todoMap, ddayMap, planMap, top, todoResult, planResult, ddayResult, dateString,
+			todoMap, ddayMap, planMap, top, datelessResult, todoResult, planResult, ddayResult, dateString,
 			i, j, month, date, left, hour, min, $div, $tr, startTime, endTime, time, dateStr,
 			cyear = parseInt(str.substr(0, 4), 10),
 			cweek = parseInt(str.substr(4, 2), 10),
@@ -62,6 +60,7 @@ zp.week = (function () {
 		startTime = time.getTime();
 		time.setDate(time.getDate() + 7);
 		endTime = time.getTime();
+		datelessResult = zp.model.getTodo('dateless');
 		todoResult = zp.model.getTodo(startTime + '00000', endTime + '00000');
 		planResult = zp.model.getPlan(startTime + '00000', endTime + '00000');
 		ddayResult = zp.model.getDday(startTime + '00000', endTime + '00000');
@@ -92,7 +91,7 @@ zp.week = (function () {
 				todoMap = todoList[i];
 				if (todoMap) {
 					for (j = 0; j < 7; j++) {
-		 				month = ('0' + dateList[j].month).slice(-2);
+						month = ('0' + dateList[j].month).slice(-2);
 						date = ('0' + dateList[j].date).slice(-2);
 						dateString = cyear + '-' + month + '-' + date;
 						if (todoMap.date === dateString) {
@@ -101,7 +100,7 @@ zp.week = (function () {
 							top = hour * configMap.tr_h + min * configMap.tr_h / 60 + 61;
 							console.log('top', top);
 							$div = $('<div/>').addClass('week-todo').attr('data-id', todoMap._id);
-							 if (todoMap.done) {
+							if (todoMap.done) {
 								$div.addClass('week-done');
 							} else if (new Date(todoMap.date).getTime() < new Date().getTime()) {
 								$div.addClass('week-due');
@@ -111,9 +110,9 @@ zp.week = (function () {
 								.find('div').addClass('input').text(todoMap.text);
 							$div.appendTo(jqueryMap[str].$week);
 						}
-					}					
-				} 
-			}	
+					}
+				}
+			}
 		});
 		todoResult.fail(function (err) {
 			console.log(err);
@@ -123,8 +122,8 @@ zp.week = (function () {
 			for (i = 0; i < planList.length; i++) {
 				planMap = planList[i];
 				if (planMap) {
-	 				for (j = 0; j < 7; j++) {
-		 				month = ('0' + dateList[j].month).slice(-2);
+					for (j = 0; j < 7; j++) {
+						month = ('0' + dateList[j].month).slice(-2);
 						date = ('0' + dateList[j].date).slice(-2);
 						dateString = cyear + '-' + month + '-' + date;
 						stime = new Date(planMap.startdate).getTime();
@@ -142,10 +141,14 @@ zp.week = (function () {
 									height = etop - top;
 								} else {
 									height = configMap.tr_h * 24 - top;
-								}								
+								}
 								$div = $('<div/>').addClass('week-plan').attr('data-idx', i);
 								left = 14.285714 * j + '%';
-								$div.css({top: top, left: left, height: height}).append($('<div/>'))
+								$div.css({
+									top: top,
+									left: left,
+									height: height
+								}).append($('<div/>'))
 									.find('div').addClass('input').text(planMap.text);
 								$div.appendTo(jqueryMap[str].$week);
 							} else if (stime < ctime && ctime < etime) {
@@ -155,25 +158,28 @@ zp.week = (function () {
 								hour = planMap.endtime.substr(0, 2);
 								min = planMap.endtime.substr(3, 2);
 								top = 0;
-								left = 14.285714 * j + '%' ;
+								left = 14.285714 * j + '%';
 								height = hour * configMap.tr_h + min * configMap.tr_h / 60 + 61;
 								$div = $('<div/>').addClass('week-plan').attr('data-idx', i);
-								$div.css({top: top, left: left, height: height}).append($('<div/>'))
+								$div.css({
+									top: top,
+									left: left,
+									height: height
+								}).append($('<div/>'))
 									.find('div').addClass('input').text(planMap.text);
-								$div.appendTo(jqueryMap[str].$week);					
+								$div.appendTo(jqueryMap[str].$week);
 							}
 						}
 					}
-				} 
-			}	
+				}
+			}
 		});
 		planResult.fail(function (err) {
 			console.log(err);
 		});
 		return true;
-	};	
-
-	onClickDate = function (e) {
+	};
+	Week.prototype.onClickDate = function (e) {
 		var
 			text = $(this).text(),
 			date = parseInt(text.split('.')[1], 10),
@@ -181,7 +187,7 @@ zp.week = (function () {
 			year = e.data.year,
 			data;
 		if (date === '') {
-			return;	
+			return;
 		}
 		data = {
 			date: date,
@@ -190,7 +196,6 @@ zp.week = (function () {
 		};
 		$.gevent.publish('day', [data]);
 	};
-
 	configModule = function (input_map) {
 		zp.util.setConfigMap({
 			input_map: input_map,
@@ -198,14 +203,10 @@ zp.week = (function () {
 			config_map: configMap
 		});
 	};
-
 	initModule = function ($container, data) {
 		var dateStr = data.year + ('0' + data.week).slice(-2);
-		stateMap.week_list[dateStr] = new Week($container, data);
-
-		return stateMap.week_list;
+		return new Week($container, data, dateStr);
 	};
-
 	return {
 		configModule: configModule,
 		initModule: initModule

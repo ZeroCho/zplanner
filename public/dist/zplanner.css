@@ -1,0 +1,1006 @@
+@charset "UTF-8";
+.main-header {
+  background: crimson;
+  color: white;
+  text-align: center;
+  height: 40px;
+  position: absolute;
+  top: 0;
+  z-index: 10;
+  width: 100%;
+  border-bottom: 1px solid black;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.main-header .info {
+  height: 40px;
+  line-height: 40px;
+}
+.main-header .title-year, .main-header .title-month, .main-header .title-date, .main-header .title-week {
+  cursor: pointer;
+}
+.main-header .user {
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+}
+.main-header .avatar {
+  color: crimson;
+  display: inline-block;
+  background: white;
+  border: 1px solid silver;
+  text-align: center;
+  margin: 5px 4px;
+  width: 30px;
+  height: 30px;
+  line-height: 28px;
+  float: left;
+}
+.main-header .name {
+  color: black;
+  float: left;
+  height: 40px;
+  line-height: 40px;
+}
+.main-header .menu {
+  display: none;
+  width: 150px;
+  position: absolute;
+  z-index: 1;
+  top: 40px;
+  background: white;
+  color: black;
+}
+.main-header .menu li {
+  border: 1px solid gray;
+  list-style-type: none;
+  height: 30px;
+  line-height: 30px;
+}
+.main-header .tool {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+.main-header .tool .tool-button {
+  background: white;
+  color: crimson;
+  float: left;
+  border: 1px solid silver;
+  margin: 5px 4px;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+}
+.main-header .tool .tool-button:hover {
+  background: lightgray;
+}
+.main-header .tool .tool-button:active {
+  background: gray;
+}
+
+main {
+  position: relative;
+  top: 40px;
+  z-index: 1;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#flick-view {
+  overflow: hidden;
+}
+
+#flick-con {
+  position: relative;
+  left: -100%;
+  clear: both;
+  top: 0;
+  pointer-events: auto;
+}
+#flick-con .flick-panel {
+  float: left;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  background: white;
+}
+#flick-con .flick-panel:first-child {
+  -webkit-transform: translate3d(100%, 0, 0);
+          transform: translate3d(100%, 0, 0);
+}
+#flick-con .flick-panel:nth-child(2) {
+  -webkit-transform: translate3d(200%, 0, 0);
+          transform: translate3d(200%, 0, 0);
+}
+#flick-con .flick-panel:last-child {
+  -webkit-transform: translate3d(0%, 0, 0);
+          transform: translate3d(0%, 0, 0);
+}
+
+.no-content {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.subheader {
+  background: orange;
+  text-align: center;
+  line-height: 20px;
+  margin-bottom: 5px;
+}
+.subheader .fa-caret-down, .subheader .fa-caret-right {
+  position: absolute;
+  left: 5px;
+  font-size: 20px;
+  margin-right: 5px;
+}
+
+.item-del, .item-alarm {
+  float: right;
+  font-size: 25px;
+}
+
+.item-alarm {
+  color: silver;
+}
+
+.modal {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background: white;
+  color: crimson;
+  display: none;
+  z-index: 100;
+  overflow: auto;
+  box-sizing: border-box;
+}
+.modal .modal-back {
+  position: absolute;
+  font-weight: bold;
+  font-size: 28px;
+  line-height: 36px;
+  cursor: pointer;
+  left: 10px;
+  top: 8px;
+  z-index: 10;
+}
+.modal .modal-close {
+  position: absolute;
+  font-size: 30px;
+  line-height: 36px;
+  cursor: pointer;
+  right: 10px;
+  top: 8px;
+  z-index: 10;
+}
+.modal .modal-title {
+  position: absolute;
+  width: 100%;
+  line-height: 50px;
+  text-align: center;
+}
+
+#modal-login {
+  height: 100%;
+}
+#modal-login #login-wrapper {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+      transform: translateY(-50%);
+}
+#modal-login #login-wrapper #modal-logo {
+  font-family: roboto, sans-serif;
+  font-size: 4em;
+  text-align: center;
+  margin-bottom: 15px;
+}
+#modal-login #login-wrapper input {
+  height: 30px;
+  line-height: 30px;
+}
+#modal-login #login-wrapper input:focus {
+  border-color: deepskyblue;
+}
+#modal-login #login-wrapper #login-sbmt {
+  height: 30px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic", sans-serif;
+  text-align: center;
+  cursor: pointer;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+#modal-login #login-wrapper #login-sbmt:focus {
+  background-color: silver;
+}
+#modal-login #login-wrapper #join-btn, #modal-login #login-wrapper #findpw-btn, #modal-login #login-wrapper #offline-btn {
+  height: 30px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic", sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+#modal-login #login-wrapper #join-btn:focus, #modal-login #login-wrapper #findpw-btn:focus, #modal-login #login-wrapper #offline-btn:focus {
+  background-color: silver;
+}
+
+#modal-join {
+  height: 100%;
+}
+#modal-join form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+      transform: translateY(-50%);
+}
+#modal-join form #join-agree {
+  height: auto;
+}
+#modal-join form #check-id-btn {
+  height: 30px;
+  background: transparent;
+  font-family: "Nanum Gothic", sans-serif;
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid gray;
+}
+#modal-join form input {
+  height: 30px;
+}
+#modal-join form #join-sbmt {
+  height: 30px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic", sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+#modal-join form #join-sbmt:focus {
+  background-color: silver;
+}
+
+#modal-findpw {
+  height: 100%;
+}
+#modal-findpw .findpw-header {
+  text-align: center;
+}
+#modal-findpw #findpw-id-sbmt, #modal-findpw #findpw-ans-sbmt, #modal-findpw #findpw-newpw-sbmt {
+  height: 30px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic", sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+#modal-findpw #findpw-id-sbmt:focus, #modal-findpw #findpw-ans-sbmt:focus, #modal-findpw #findpw-newpw-sbmt:focus {
+  background-color: silver;
+}
+#modal-findpw #findpw-forms {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+      transform: translateY(-50%);
+}
+#modal-findpw input {
+  height: 30px;
+  line-height: 30px;
+}
+#modal-findpw input:focus {
+  border-color: deepskyblue;
+}
+
+#modal-menu {
+  height: 100%;
+}
+#modal-menu .menu {
+  float: left;
+  width: 50%;
+  border: 1px solid silver;
+  color: crimson;
+}
+
+#modal-search {
+  height: 100%;
+}
+#modal-search form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+      transform: translateY(-50%);
+}
+
+#modal-todo {
+  height: 100%;
+}
+#modal-todo form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+      transform: translateY(-50%);
+}
+#modal-todo input {
+  height: 30px;
+  line-height: 30px;
+}
+#modal-todo input:focus {
+  border-color: deepskyblue;
+}
+#modal-todo #todo-sbmt {
+  height: 30px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic", sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+#modal-todo #todo-sbmt:focus {
+  background-color: silver;
+}
+
+#modal-plan {
+  height: 100%;
+}
+#modal-plan form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+      transform: translateY(-50%);
+}
+#modal-plan input {
+  height: 30px;
+  line-height: 30px;
+}
+#modal-plan input:focus {
+  border-color: deepskyblue;
+}
+#modal-plan #plan-sbmt {
+  height: 30px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic", sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+#modal-plan #plan-sbmt:focus {
+  background-color: silver;
+}
+
+#modal-dday {
+  height: 100%;
+}
+#modal-dday form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+      transform: translateY(-50%);
+}
+#modal-dday input {
+  height: 30px;
+  line-height: 30px;
+}
+#modal-dday input:focus {
+  border-color: deepskyblue;
+}
+#modal-dday #dday-sbmt {
+  height: 30px;
+  background: transparent;
+  color: crimson;
+  border: 1px solid gray;
+  font-family: "Nanum Gothic", sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+#modal-dday #dday-sbmt:focus {
+  background-color: silver;
+}
+
+#modal-type {
+  height: 100%;
+}
+#modal-type .wrapper {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+      transform: translateY(-50%);
+}
+#modal-type .type-list {
+  float: left;
+  width: 33.33333%;
+  text-align: center;
+  font-size: 30px;
+}
+
+#modal-search {
+  height: 100%;
+}
+#modal-search form {
+  width: 80%;
+  margin: 0 auto;
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+      transform: translateY(-50%);
+}
+#modal-search #search-date {
+  width: 100%;
+  height: 30px;
+  margin-bottom: 10px;
+}
+#modal-search #search-btn, #modal-search #search-today {
+  width: 50%;
+  border: 1px solid silver;
+  height: 40px;
+  color: crimson;
+  background: white;
+}
+
+.calendar-table {
+  text-align: center;
+  border-collapse: collapse;
+}
+.calendar-table thead th {
+  border-bottom: 1px solid black;
+}
+.calendar-table td:nth-child(n+1) {
+  vertical-align: top;
+}
+.calendar-table td:first-child, .calendar-table th:first-child, .calendar-table .calendar-caption {
+  color: green;
+}
+.calendar-table td:nth-child(2), .calendar-table th:nth-child(2) {
+  color: red;
+}
+.calendar-table td:last-child, .calendar-table th:last-child {
+  color: blue;
+}
+.calendar-table .hidden {
+  visibility: hidden;
+  display: none;
+}
+.calendar-table .td-today {
+  color: darkred;
+  text-decoration: underline;
+  font-weight: bolder;
+}
+
+.dday-table {
+  width: 100%;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.dday-table td {
+  border-top: 1px solid silver;
+  height: 40px;
+  background: red;
+  color: white;
+  text-align: center;
+}
+
+.plan-table {
+  width: 100%;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.plan-table td {
+  border-top: 1px solid silver;
+  height: 40px;
+  text-align: center;
+  color: lightgray;
+}
+
+.todo {
+  position: absolute;
+  width: 100%;
+  background: yellow;
+  left: 0;
+  height: 39px;
+  text-align: center;
+}
+.todo .input {
+  height: 39px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  line-height: 39px;
+}
+
+.plan {
+  background: skyblue;
+  text-align: center;
+}
+.plan .input {
+  height: 39px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  line-height: 39px;
+}
+
+.dday {
+  background: red;
+  height: 39px;
+  text-align: center;
+}
+
+.dateless {
+  background: yellow;
+  height: 39px;
+  text-align: center;
+}
+
+.whole {
+  background: skyblue;
+  height: 39px;
+  text-align: center;
+}
+
+.time-indicator {
+  background: crimson;
+  height: 1px;
+  width: 100%;
+  position: absolute;
+}
+
+.week-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-collapse--moz-user-select: -moz-none;
+  border-collapse--ms-user-select: none;
+  border-collapse--webkit-user-select: none;
+  border-collapse-user-select: none;
+}
+.week-table th {
+  text-align: center;
+  height: 30px;
+  border: 1px solid silver;
+}
+.week-table th:first-child {
+  color: red;
+  border-left: none;
+}
+.week-table th:last-child {
+  color: blue;
+}
+.week-table .week-date {
+  text-align: center;
+}
+.week-table td {
+  max-width: 0;
+  width: 14.28571%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: center;
+  height: 30px;
+  color: silver;
+  border: 1px solid silver;
+}
+.week-table tbody tr:first-child td {
+  border-bottom: 1px solid black;
+  color: #000;
+}
+
+.week-plan, .week-todo, .week-due, .week-done {
+  overflow: scroll;
+  border: 1px solid silver;
+  color: black;
+  position: absolute;
+  width: 100%/7;
+  z-index: 1;
+  height: 30px;
+  white-space: nowrap;
+  font-size: 10px;
+}
+
+.week-plan {
+  background: skyblue;
+}
+
+.week-todo {
+  background: yellow;
+}
+
+.week-due {
+  background: orange;
+}
+
+.week-done {
+  background: yellowgreen;
+}
+
+.week-dday {
+  width: 100%;
+  background: red;
+  border: 1px solid silver;
+  color: black;
+  overflow: scroll;
+  height: 30px;
+}
+
+.week-whole {
+  background: skyblue;
+  width: 100%;
+  border: 1px solid silver;
+  color: black;
+  overflow: scroll;
+  height: 30px;
+}
+
+.month-calendar {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.month-calendar table {
+  width: 100%;
+  height: 100%;
+}
+.month-calendar table caption {
+  display: none;
+}
+.month-calendar table tbody th, .month-calendar table td {
+  cursor: pointer;
+  border-left: 1px solid gray;
+  border-right: 1px solid gray;
+  border-collapse: collapse;
+  max-width: 0;
+  width: 12.5%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.month-calendar table tr {
+  border-bottom: 1px solid gray;
+}
+.month-calendar table td:hover {
+  font-weight: bold;
+}
+
+.month-dday {
+  overflow: scroll;
+  background-color: red;
+  border: 1px solid silver;
+  font-size: 10px;
+}
+
+.month-todo {
+  overflow: scroll;
+  background-color: yellow;
+  border: 1px solid silver;
+  font-size: 10px;
+}
+
+.month-done {
+  background-color: yellowgreen;
+}
+
+.month-due {
+  background-color: orange;
+}
+
+.month-plan {
+  overflow: scroll;
+  background-color: skyblue;
+  border: 1px solid silver;
+  font-size: 10px;
+}
+
+.year-main {
+  overflow: auto;
+  border-left: 1px solid gray;
+  border-right: 1px solid gray;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.year-calendar {
+  font-size: 10px;
+  float: left;
+  width: 50%;
+  height: 110px;
+  border-bottom: 1px solid silver;
+}
+.year-calendar:hover {
+  background: #ebebb8;
+}
+.year-calendar:nth-child(2n+1) {
+  border-right: 1px solid silver;
+}
+.year-calendar table {
+  width: 100%;
+  cursor: pointer;
+}
+.year-calendar table th {
+  border-bottom: 0;
+}
+.year-calendar table th:first-child {
+  display: none;
+}
+.year-calendar table td {
+  margin: 0;
+  padding: 0;
+}
+
+.dateless-item {
+  position: relative;
+  left: 10px;
+  margin-bottom: 10px;
+}
+.dateless-item .dateless-done {
+  display: inline-block;
+  height: 25px;
+  width: 20px;
+  line-height: 25px;
+}
+.dateless-item .dateless-text {
+  top: 0;
+  position: absolute;
+  left: 20px;
+  right: 65px;
+  display: inline-block;
+  height: 25px;
+  line-height: 25px;
+  font-size: 20px;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.dateless-item .dateless-option {
+  position: absolute;
+  right: 20px;
+  display: inline-block;
+  height: 25px;
+  line-height: 25px;
+  top: 0;
+}
+
+.todo-item {
+  position: relative;
+  left: 10px;
+  margin-bottom: 10px;
+}
+.todo-item .todo-done {
+  display: inline-block;
+  height: 40px;
+  width: 20px;
+  line-height: 40px;
+}
+.todo-item .todo-text {
+  position: absolute;
+  left: 20px;
+  right: 65px;
+  display: inline-block;
+  height: 20px;
+  line-height: 20px;
+  font-size: 20px;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.todo-item .todo-due {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  display: inline-block;
+  height: 20px;
+  line-height: 20px;
+  font-size: 20px;
+}
+.todo-item .todo-option {
+  position: absolute;
+  right: 20px;
+  display: inline-block;
+  height: 40px;
+  line-height: 40px;
+  top: 0;
+}
+
+.item-due {
+  color: crimson;
+}
+
+.item-done {
+  color: lightgray;
+  text-decoration: line-through;
+}
+
+#dday-main {
+  padding-top: 10px;
+}
+
+.dday-item {
+  position: relative;
+  left: 10px;
+  margin-bottom: 10px;
+}
+.dday-item .dday-left {
+  display: inline-block;
+  height: 40px;
+  width: 50px;
+}
+.dday-item .dday-target {
+  position: absolute;
+  left: 50px;
+  top: 20px;
+  display: inline-block;
+  height: 20px;
+  font-size: 20px;
+}
+.dday-item .dday-text {
+  position: absolute;
+  left: 50px;
+  display: inline-block;
+  height: 20px;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 20px;
+}
+.dday-item .dday-option {
+  position: absolute;
+  right: 20px;
+  display: inline-block;
+  height: 20px;
+  line-height: 20px;
+  top: 0;
+}
+
+#plan-main {
+  padding-top: 10px;
+}
+
+.plan-item {
+  position: relative;
+  height: 60px;
+  left: 10px;
+  margin-bottom: 10px;
+}
+.plan-item .plan-text {
+  position: absolute;
+  left: 20px;
+  right: 30px;
+  display: inline-block;
+  height: 20px;
+  line-height: 20px;
+  top: 40px;
+  font-size: 20px;
+  font-weight: bold;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.plan-item .plan-start {
+  position: absolute;
+  left: 20px;
+  top: 0;
+  display: inline-block;
+  height: 20px;
+  font-size: 20px;
+}
+.plan-item .plan-end {
+  position: absolute;
+  left: 20px;
+  display: inline-block;
+  font-size: 20px;
+  height: 20px;
+  top: 20px;
+}
+.plan-item .plan-option {
+  position: absolute;
+  right: 20px;
+  display: inline-block;
+  height: 60px;
+  line-height: 60px;
+  top: 0;
+}
+
+/* zp.css
+ * δú¿φè╕ δäñ∞₧ä∞èñφÄÿ∞¥┤∞èñ ∞èñφâÇ∞¥╝
+ */
+/** ∞₧¼∞äñ∞áò ∞ï£∞₧æ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 15px;
+  line-height: 15px;
+  height: 100%;
+}
+
+body {
+  font-family: "Nanum Gothic", sans-serif;
+  position: relative;
+  height: 100%;
+}
+
+ol, ul, dl {
+  list-style-position: inside;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/** ∞₧¼∞äñ∞áò δü¥ */
+/** Ω│╡φå╡ css ∞ï£∞₧æ */
+.full {
+  width: 100%;
+}
+
+.float-right {
+  float: right;
+}
+
+.float-left {
+  float: left;
+}
+
+label {
+  display: inline-block;
+  padding: 3px;
+}
+
+/** Ω│╡φå╡ css δü¥ */
+#zplanner {
+  position: relative;
+  height: 100%;
+}

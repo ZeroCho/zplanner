@@ -1,52 +1,50 @@
 zp.month = (function () {
 	var
 		configMap = {
-			settable_map  : {
+			settable_map: {
 				set_cur_anchor: true
 			},
 			set_cur_anchor: null
 		},
 		stateMap = {
-			month_list: []
+			monthList: [],
+			monthMap: {}
 		},
 		jqueryMap = {},
-		configModule, initModule, setJqueryMap, insertCalendar, insertPlan,
-		onClickDate, onClickWeek, Month;
-	Month = function ($container, data) {
-		var month = data.month,
-			year = data.year,
-			date_str;
-		$container.load('/html/zp.month.html', function () {
-			if (month < 10) { month = '0' + month; }
-			date_str = String(year) + month;
-			console.log('month', date_str);
-			setJqueryMap($container, date_str);
-			insertCalendar(data.month, data.year);
-			jqueryMap[date_str].$month.attr('data-date', date_str);
-			jqueryMap[date_str].$month.find('td').on('click', data, onClickDate);
-			jqueryMap[date_str].$month.find('tbody th').on('click', data, onClickWeek);
-		});
+		configModule, initModule, Month;
+	Month = function ($container, data, dateStr) {
+		this.month = parseInt(data.month, 10);
+		this.year = parseInt(data.year, 10);
+		this.dateStr = dateStr;
+		this.initiate($container, data);
 	};
-	setJqueryMap = function ($container, str) {
-		jqueryMap.$container = $container;
+	Month.prototype.initiate = function ($container, data) {
+		$container.html($('#zp-month').html());
+		console.log('month', this.dateStr);
+		this.setJqueryMap($container, this.dateStr);
+		this.insertCalendar(data.month, data.year);
+		jqueryMap[this.dateStr].$month.attr('data-date', this.dateStr);
+		jqueryMap[this.dateStr].$month.find('td').on('click', data, this.onClickDate);
+		jqueryMap[this.dateStr].$month.find('tbody th').on('click', data, this.onClickWeek);
+	};
+	Month.prototype.setJqueryMap = function ($container, str) {
 		jqueryMap[str] = {
 			$month: $container.find('.month-calendar')
 		};
 	};
-	insertCalendar = function (month, year) {
+	Month.prototype.insertCalendar = function (month, year) {
 		var
 			option = {
 				month: month,
-				year : year
-			},
-			str;
-		month = (month < 10) ? '0' + month : month;
-		str = String(year) + month;
-		zp.calendar.initModule(jqueryMap[str].$month, option);
-		insertPlan(str);
+				year: year
+			};
+		zp.calendar.initModule(jqueryMap[this.dateStr].$month, option);
+		this.insertPlan(this.dateStr);
+		stateMap.monthList.push(this.dateStr);
+		stateMap.monthMap[this.dateStr] = jqueryMap[this.dateStr].$container;
 		return true;
 	};
-	insertPlan = function (str) {
+	Month.prototype.insertPlan = function (str) {
 		var
 			todoMap, ddayMap, planObj, startTime, endTime, time, dateStr,
 			i, target, year, month, date, $td, idx, due, $obj, todoResult, planResult, ddayResult,
@@ -158,7 +156,7 @@ zp.month = (function () {
 		});
 		return true;
 	};
-	onClickWeek = function (e) {
+	Month.prototype.onClickWeek = function (e) {
 		var
 			week = parseInt(('0' + parseInt($(this).html(), 10)).slice(-2), 10),
 			year = e.data.year,
@@ -167,7 +165,7 @@ zp.month = (function () {
 			return false;
 		}
 		if (week === '0') {
-			year = --year;
+			year--;
 			week = zp.calendar.getWeekNum(31, 12, year);
 		}
 		data = {
@@ -176,36 +174,35 @@ zp.month = (function () {
 		};
 		$.gevent.publish('week', [data]);
 	};
-	onClickDate = function (e) {
+	Month.prototype.onClickDate = function (e) {
 		var
 			date = parseInt($(this).find('div').eq(0).text(), 10),
 			month = e.data.month,
 			year = e.data.year,
 			data;
-		if (date == '') {
+		if (isNaN(date)) {
 			return;
 		}
 		data = {
-			date : date,
+			date: date,
 			month: month,
-			year : year
+			year: year
 		};
 		$.gevent.publish('day', [data]);
 	};
 	configModule = function (input_map) {
 		zp.util.setConfigMap({
-			input_map   : input_map,
+			input_map: input_map,
 			settable_map: configMap.settable_map,
-			config_map  : configMap
+			config_map: configMap
 		});
 	};
 	initModule = function ($container, data) {
 		var dateStr = data.year + ('0' + data.month).slice(-2);
-		stateMap.month_list[dateStr] = new Month($container, data);
-		return $container;
+		return new Month($container, data, dateStr);
 	};
 	return {
 		configModule: configModule,
-		initModule  : initModule
+		initModule: initModule
 	};
 }());

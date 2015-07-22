@@ -1,43 +1,38 @@
 @import 'compass'
-.todo-item
+@import "compass/css3/user-interface"
+#plan-main
+	padding-top: 10px
+.plan-item
 	position: relative
+	height: 60px
 	left: 10px
 	margin-bottom: 10px
-	.todo-done
-		display: inline-block
-		height: 40px
-		width: 20px
-	.todo-text
+	.plan-text
 		position: absolute
 		left: 20px
 		right: 30px
 		display: inline-block
-		height: 24px
+		height: 20px
+		line-height: 20px
+		top: 40px
 		font-size: 20px
 		font-weight: bold
 		text-overflow: ellipsis
 		overflow: hidden
 		white-space: nowrap
-	.todo-due
+	.plan-start
 		position: absolute
 		left: 20px
-		top: 20px
+		top: 0
 		display: inline-block
 		height: 20px
 		font-size: 20px
-	.todo-option
+	.plan-end
 		position: absolute
-		right: 20px
+		left: 20px
 		display: inline-block
-		height: 40px
-
-.item-due
-	color: crimson
-
-.item-done
-	color: lightgray
-	text-decoration: line-through
-
-.no-content
-	text-align: center
-	margin-top: 20px
+		font-size: 20px
+		height: 20px
+		top: 20px
+	.plan-option
+		+item-option(60px)

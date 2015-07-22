@@ -1,0 +1,133 @@
+@import 'compass'
+@import 'compass/css3/user-interface'
+$top: 40px
+$btn-margin: 5px
+$caret-margin: 10px
+$btn-height: $top - $btn-margin * 2
+$list: day plan todo
+.main-header
+	background: crimson
+	color: white
+	text-align: center
+	height: $top
+	position: absolute
+	top: 0
+	z-index: 10
+	width: 100%
+	border-bottom: 1px solid black
+	+user-select(none)
+	.info
+		height: $top
+		line-height: $top
+	.title-year, .title-month, .title-date, .title-week
+		cursor: pointer
+	.user
+		position: absolute
+		top: 0
+		left: 0
+		cursor: pointer
+	.avatar
+		color: crimson
+		display: inline-block
+		background: white
+		border: 1px solid silver
+		text-align: center
+		margin: $btn-margin 4px
+		width: $btn-height
+		height: $btn-height
+		line-height: $btn-height - 2
+		float: left
+	.name
+		color: black
+		float: left
+		height: $top
+		line-height: $top
+	.menu
+		display: none
+		width: 150px
+		position: absolute
+		z-index: 1
+		top: $top
+		background: white
+		color: black
+		li
+			border: 1px solid gray
+			list-style-type: none
+			height: 30px
+			line-height: 30px
+	.tool
+		position: absolute
+		right: 0
+		top: 0
+		.tool-button
+			background: white
+			color: crimson
+			float: left
+			border: 1px solid silver
+			margin: $btn-margin 4px
+			width: $btn-height
+			height: $btn-height
+			line-height: $btn-height
+			&:hover
+				background: lightgray
+			&:active
+				background: gray
+
+main
+	position: relative
+	top: $top
+	z-index: 1
+	+user-select(none)
+
+#flick-view
+	overflow: hidden
+
+#flick-con
+	position: relative
+	left: -100%
+	clear: both
+	top: 0
+	pointer-events: auto
+	.flick-panel
+		float: left
+		width: 100%
+		position: absolute
+		top: 0
+		background: white
+		&:first-child
+			transform: translate3d(100%, 0, 0)
+		&:nth-child(2)
+			transform: translate3d(200%, 0, 0)
+		&:last-child
+			transform: translate3d(0%, 0, 0)
+
+.no-content
+	text-align: center
+	margin-top: 20px
+	margin-bottom: 20px
+
+.subheader
+	background: orange
+	text-align: center
+	line-height: 20px
+	margin-bottom: 5px
+	.fa-caret-down, .fa-caret-right
+		position: absolute
+		left: 5px
+		font-size: 20px
+		margin-right: 5px
+
+.item-del, .item-alarm
+	float: right
+	font-size: 25px
+
+.item-alarm
+	color: silver
+
+=item-option($height: 40px, $right: 20px)
+	position: absolute
+	right: $right
+	display: inline-block
+	height: $height
+	line-height: $height
+	top: 0

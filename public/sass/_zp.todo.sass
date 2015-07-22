@@ -1,0 +1,66 @@
+@import 'compass'
+$dateless: 25px
+$todo: 40px
+$checkbox: 20px
+.dateless-item
+	position: relative
+	left: 10px
+	margin-bottom: 10px
+	.dateless-done
+		display: inline-block
+		height: $dateless
+		width: $checkbox
+		line-height: $dateless
+	.dateless-text
+		top: 0
+		position: absolute
+		left: $checkbox
+		right: 65px
+		display: inline-block
+		height: $dateless
+		line-height: $dateless
+		font-size: 20px
+		font-weight: bold
+		text-overflow: ellipsis
+		overflow: hidden
+		white-space: nowrap
+	.dateless-option
+		+item-option($dateless)
+.todo-item
+	position: relative
+	left: 10px
+	margin-bottom: 10px
+	.todo-done
+		display: inline-block
+		height: $todo
+		width: $checkbox
+		line-height: $todo
+	.todo-text
+		position: absolute
+		left: $checkbox
+		right: 65px
+		display: inline-block
+		height: $todo / 2
+		line-height: $todo / 2
+		font-size: 20px
+		font-weight: bold
+		text-overflow: ellipsis
+		overflow: hidden
+		white-space: nowrap
+	.todo-due
+		position: absolute
+		left: 20px
+		top: $todo / 2
+		display: inline-block
+		height: $todo / 2
+		line-height: $todo / 2
+		font-size: 20px
+	.todo-option
+		+item-option($todo)
+
+.item-due
+	color: crimson
+
+.item-done
+	color: lightgray
+	text-decoration: line-through

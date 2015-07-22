@@ -17,15 +17,16 @@ zp.plan = (function () {
 	setJqueryMap = function ($container) {
 		jqueryMap = {
 			$container: $container,
-			$main     : $container.find('.plan-main')
+			$main: $container.find('#plan-main')
 		};
 	};
 	showPlan = function () {
-		var planMap, startdate, starttime, enddate, endtime, i, result,
+		var planMap, startdate, starttime, enddate, endtime, i, result, spinner,
 			startStr, endStr, $div, $option, $del, $alarm, $text, $start, $end,
 			$frag = $(document.createDocumentFragment());
 		result = zp.model.getPlan();
 		result.done(function (planList) {
+			$(spinner.el).remove();
 			if (planList.length) {
 				jqueryMap.$main.html('');
 				for (i = 0; i < planList.length; i++) {
@@ -37,10 +38,10 @@ zp.plan = (function () {
 						endtime = planMap.endtime;
 						startStr = startdate + ' ' + starttime;
 						endStr = enddate + ' ' + endtime;
-						$div = $('<div/>').addClass('plan-item').attr('data-id', planMap._id);
+						$div = $('<div/>').addClass('plan-item').attr('data-id', planMap._id).attr('data-pid', planMap.plan_idx);
 						$option = $('<div/>').addClass('plan-option');
-						$del = $('<div/>').addClass('plan-del').html('<i class="fa fa-trash-o"></i>');
-						$alarm = $('<div/>"').addClass('plan-alarm').html('<i class="fa fa-alarm"></i>');
+						$del = $('<div/>').addClass('item-del').html('<i class="fa fa-trash-o"></i>');
+						$alarm = $('<div/>').addClass('item-alarm').html('<i class="fa fa-alarm"></i>');
 						$text = $('<div/>').addClass('plan-text').text(planMap.text);
 						$start = $('<div/>').addClass('plan-start').text(startStr);
 						$end = $('<div/>').addClass('plan-end').text(endStr);
@@ -52,23 +53,43 @@ zp.plan = (function () {
 				jqueryMap.$main.append($frag);
 			}
 		});
-		jqueryMap.$main.html('<div class="no-content">일정을 작성해주세요</div>');
+		result.fail(function (err) {
+			$(spinner.el).remove();
+			if (err === 'not_found') {
+				jqueryMap.$main.html('<div class="no-content">일정을 작성해주세요</div>');
+			} else {
+				alert(err);
+			}
+		});
+		spinner = new Spinner().spin();
+		jqueryMap.$main.append(spinner.el);
 	};
 	onDelete = function () {
 		var
 			$item = $(this).closest('.plan-item'),
-			id = $item.data('id'), result;
-		if (!confirm('삭제하시겠습니까?')) {
-			return false;
+			id = $item.data('id'),
+			pid = $item.data('pid'),
+			$plans = $item.parent().find('[data-pid=' + pid + ']'),
+			result;
+		if (confirm('정말 삭제하시겠습니까?')) {
+			if (confirm('이 종류의 일정을 모두 삭제하시겠습니까?')) {
+				result = zp.model.deletePlans(pid);
+				result.done(function () {
+					$plans.remove();
+				});
+				result.fail(function (err) {
+					console.log(err);
+				});
+				return;
+			}
+			result = zp.model.deleteItem(id);
+			result.done(function () {
+				$item.remove();
+			});
+			result.fail(function () {
+				alert('오류 발생');
+			});
 		}
-		result = zp.model.deleteItem(id);
-		result.done(function () {
-			$item.remove();
-		});
-		result.fail(function () {
-			alert('오류 발생');
-		});
-		return true;
 	};
 	holdTap = function (e) {
 		console.log('holdtap');
@@ -194,14 +215,13 @@ zp.plan = (function () {
 		});
 	};
 	initModule = function ($container) {
-		$container.load('/html/zp.plan.html', function () {
-			stateMap.$container = $container;
-			setJqueryMap($container);
-			showPlan();
-			jqueryMap.$main.on('click', '.plan-del', onDelete);
-			jqueryMap.$main.on('touchstart', '.plan-text, .plan-start, .plan-end', holdTap);
-			jqueryMap.$main.on('touchend', '.plan-text, .plan-start, .plan-end', holdStop);
-		});
+		$container.html($('#zp-plan').html());
+		stateMap.$container = $container;
+		setJqueryMap($container);
+		showPlan();
+		jqueryMap.$main.on('click', '.item-del', onDelete);
+		jqueryMap.$main.on('touchstart', '.plan-text, .plan-start, .plan-end', holdTap);
+		jqueryMap.$main.on('touchend', '.plan-text, .plan-start, .plan-end', holdStop);
 	};
 	return {
 		configModule: configModule,

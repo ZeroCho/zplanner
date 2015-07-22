@@ -1,45 +1,46 @@
 var gulp = require('gulp'),
-	csslint = require('gulp-csslint'),
-	concatcss = require('gulp-concat-css'),
-	uglifycss = require('gulp-uglifycss'),
+	minifycss = require('gulp-minify-css'),
+	autoprefixer = require('gulp-autoprefixer'),
 	uglify = require('gulp-uglify'),
-	jshint = require('gulp-jshint'),
-	stylish = require('jshint-stylish'),
 	concat = require('gulp-concat'),
 	rename = require('gulp-rename'),
-	jade = require('gulp-jade'),
 	watch = require('gulp-watch'),
 	gulpif = require('gulp-if'),
-	sass = require('gulp-sass'),
 	notify = require('gulp-notify'),
 	nodemon = require('gulp-nodemon'),
 	livereload = require('gulp-livereload'),
 	compass = require('gulp-compass'),
 	del = require('del'),
+	dusthtml = require('gulp-dust-html'),
 	plumber = require('gulp-plumber'),
+	merge = require('merge-stream'),
 	path = require('path'),
 	config = {
-		lint  : false,
-		hint  : false,
+		lint: false,
+		hint: false,
 		concat: true,
 		uglify: true,
 		rename: true
 	},
 	dir = {
 		sass: {
-			src       : 'public/sass/*.sass',
+			src: 'public/sass/*.sass',
+			cssSrc: 'public/css',
 			compassSrc: 'public/sass',
-			dest      : 'public/css/'
+			dest: 'public/css/'
 		},
-		js  : {
-			src     : 'public/js/*.js',
-			filename: 'zecretary.js',
-			dest    : 'public/dist/js/'
+		js: {
+			src: 'public/js/*.js',
+			filename: 'zplanner.js',
+			dest: 'public/dist/'
 		},
-		css : {
-			src     : 'public/css/*.css',
-			filename: 'zecretary.css',
-			dest    : 'public/dist/css/'
+		dist: {
+			js: 'public/dist/zplanner.js',
+			css: 'public/dist/zplanner.min.css'
+		},
+		www: {
+			index: '../www',
+			dist: '../www/dist/'
 		}
 	},
 	notifyInfo = {
@@ -47,82 +48,66 @@ var gulp = require('gulp'),
 	},
 	plumberErrorHandler = {
 		errorHandler: notify.onError({
-			title  : notifyInfo.title,
+			title: notifyInfo.title,
 			message: "Error: <%= error.message %>"
 		})
 	};
-gulp.task('default', ['build']);
-gulp.task('build', ['clean', 'styles', 'scripts', 'watch']);
-gulp.task('dev', ['build', 'serve']);
+gulp.task('default', ['product']);
+gulp.task('build', ['clean', 'styles', 'scripts', 'dust']);
+gulp.task('product', ['build', 'serve', 'watch']);
 gulp.task('watch', ['clean'], function () {
 	livereload.listen();
-	gulp.watch(dir.js.src, ['scripts'], function (i, a, c) {
-		console.log(i, a, c);
+	gulp.watch(dir.js.src, ['scripts'], function (e) {
+		console.log('watch scripts', e, e.path);
 	});
-	gulp.watch(dir.sass.src, ['styles'], function (i, a, c) {
-		console.log(i, a, c);
+	gulp.watch(dir.sass.src, ['styles'], function (e) {
+		console.log('watch sass', e, e.path);
 	});
-	gulp.watch(['public/dist/**/*'], function (event) {
+	gulp.watch('views/*.dust', ['dust'], function (e) {
+		console.log('watch dust', e, e.path);
+	});
+	gulp.watch([dir.dist.css, dir.dist.js], function (event) {
 		gulp.src(event.path)
 			.pipe(plumber(plumberErrorHandler))
 			.pipe(livereload());
-			//.pipe(notify({
-			//	title  : notifyInfo.title,
-			//	message: event.path.replace(__dirname, '').replace(/\\/g, '/') + ' was ' + event.type + ' and reloaded'
-			//}));
 	});
 	gulp.watch(['pubic/html/*.html'], function (event) {
-		console.log(event);
+		console.log('watch html', event);
 		gulp.src(event.path)
 			.pipe(plumber(plumberErrorHandler))
+			.pipe(livereload());
+	});
+	gulp.watch(['public/phonegapHandler.js'], function (event) {
+		gulp.src(event.path)
+			.pipe(plumber(plumberErrorHandler))
+			.pipe(gulp.dest(dir.www.index))
 			.pipe(livereload());
 	});
 });
 gulp.task('serve', ['build'], function () {
 	return nodemon({
-		script: 'app.js'
+		script: './bin/www'
 	});
 });
 gulp.task('scripts', ['js:uglify']);
-gulp.task('styles', ['css:uglify']);
-gulp.task('clean', function () {
-	del([dir.js.dest + '*', dir.css.dest + '*']);
-});
-gulp.task('compass', function () {
+gulp.task('styles', function () {
 	gulp.src(dir.sass.src)
 		.pipe(plumber(plumberErrorHandler))
 		.pipe(compass({
-			css        : 'public/css',
-			sass       : 'public/sass',
-			config_file: 'public/config.rb',
-			debug      : false
+			css: dir.sass.cssSrc,
+			sass: dir.sass.compassSrc
 		}))
-		.pipe(gulp.dest(dir.sass.dest));
+		.pipe(autoprefixer('last 2 version', 'safari 5', 'ie 8', 'ie9', 'opera 12.1', 'ios 6'))
+		.pipe(gulp.dest(dir.js.dest))
+		.pipe(minifycss())
+		.pipe(rename({suffix: '.min'}))
+		.pipe(gulp.dest(dir.js.dest))
+		.pipe(gulp.dest(dir.www.dist));
 });
-gulp.task('css:lint', function () {
-	gulp.src(dir.css.src)
-		.pipe(gulpif(config.lint, csslint()))
-		.pipe(gulpif(config.lint, csslint.reporter()));
+gulp.task('clean', function () {
+	del([dir.js.dest + '*']);
 });
-gulp.task('css:concat', ['compass'], function () {
-	gulp.src(dir.css.src)
-		.pipe(plumber(plumberErrorHandler))
-		.pipe(gulpif(config.concat, concatcss(dir.css.filename)))
-		.pipe(gulp.dest(dir.css.dest));
-});
-gulp.task('css:uglify', ['css:concat'], function () {
-	gulp.src(dir.css.dest + dir.css.filename)
-		.pipe(plumber(plumberErrorHandler))
-		.pipe(gulpif(config.uglify, uglifycss()))
-		.pipe(gulpif(config.rename, rename({suffix: '.min'})))
-		.pipe(gulp.dest(dir.css.dest));
-});
-gulp.task('js:hint', function () {
-	gulp
-		.src(dir.js.src)
-		.pipe(gulpif(config.hint, jshint()))
-		.pipe(gulpif(config.hint, jshint.reporter(stylish)));
-});
+
 gulp.task('js:concat', function () {
 	gulp
 		.src([
@@ -136,12 +121,29 @@ gulp.task('js:concat', function () {
 		])
 		.pipe(plumber(plumberErrorHandler))
 		.pipe(gulpif(config.concat, concat(dir.js.filename)))
-		.pipe(gulp.dest(dir.js.dest));
+		.pipe(gulp.dest(dir.js.dest))
+		.pipe(gulp.dest(dir.www.dist));
 });
 gulp.task('js:uglify', ['js:concat'], function () {
 	gulp.src(dir.js.dest + dir.js.filename)
 		.pipe(plumber(plumberErrorHandler))
 		.pipe(gulpif(config.uglify, uglify()))
 		.pipe(gulpif(config.rename, rename({suffix: '.min'})))
-		.pipe(gulp.dest(dir.js.dest));
+		.pipe(gulp.dest(dir.js.dest))
+		.pipe(gulp.dest(dir.www.dist));
+});
+gulp.task('dust', function () {
+	gulp.src('views/index.dust')
+		.pipe(plumber(plumberErrorHandler))
+		.pipe(dusthtml({
+			whitespace: true,
+			data: {
+				title: 'Zplanner'
+			}
+		}))
+		.pipe(gulp.dest('public/'))
+		.pipe(gulp.dest(dir.www.index))
+		.pipe(livereload());
+	gulp.src('public/zplanner.appcache')
+		.pipe(gulp.dest(dir.www.index));
 });

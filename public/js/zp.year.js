@@ -8,24 +8,25 @@ zp.year = (function () {
 			set_cur_anchor: null
 		},
 		stateMap = {
-			$container: null,
-			year_list: []
+			yearMap: {},
+			yearList: []
 		},
 		jqueryMap = {},
-		initModule, setJqueryMap, configModule, insertCalendar, onClickTable, Year;
-
+		initModule, configModule, Year, loadCache;
 	Year = function ($container, data) {
-		$container.load('/html/zp.year.html', function () {
-			console.log(data.year);
-			setJqueryMap($container, data.year);
-			insertCalendar(data.year);
-			jqueryMap[data.year].$calendar.on('click', data, onClickTable);
-		});
+		this.year = data.year;
+		this.initiate($container);
 	};
-
-	insertCalendar = function (year) {
+	Year.prototype.initiate = function ($container) {
+		$container.html($('#zp-year').html());
+		this.setJqueryMap($container, this.year);
+		this.insertCalendar(this.year);
+		jqueryMap[this.year].$calendar.on('click', this.year, this.onClickTable);
+	};
+	Year.prototype.insertCalendar = function (year) {
 		var
-			$container, i = 0,
+			$container,
+			i = 0,
 			option = {
 				year: year
 			};
@@ -34,26 +35,26 @@ zp.year = (function () {
 			option.month = parseInt($container.data('month'), 10);
 			zp.calendar.initModule($container, option);
 		}
+		stateMap.yearList.push(year);
+		stateMap.yearMap[year] = jqueryMap[year].$container;
 	};
-
-	setJqueryMap = function ($container, str) {
-		jqueryMap.$container = $container;
+	Year.prototype.setJqueryMap = function ($container, str) {
 		jqueryMap[str] = {
 			$calendar: $container.find('.year-calendar')
 		};
 	};
-	
-	onClickTable = function (e) {
+	Year.prototype.onClickTable = function (e) {
 		var
 			month = $(this).data('month'),
-			year = e.data.year,
+			year = e.data,
 			data = {
 				month: month,
 				year: year
 			};
 		$.gevent.publish('month', [data]);
 	};
-
+	loadCache = function () {
+	};
 	configModule = function (input_map) {
 		zp.util.setConfigMap({
 			input_map: input_map,
@@ -61,13 +62,15 @@ zp.year = (function () {
 			config_map: configMap
 		});
 	};
-
 	initModule = function ($container, data) {
 		data.year = parseInt(data.year, 10);
-		stateMap.$container = $container;
-		stateMap.year_list[data.year] = new Year($container, data);
+		if (stateMap.yearList[data.year]) {
+			alert('already here!');
+			$container.replaceWith(stateMap.yearMap[data.year].$container);
+		} else {
+			return new Year($container, data);
+		}
 	};
-		
 	return {
 		configModule: configModule,
 		initModule: initModule

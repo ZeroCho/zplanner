@@ -6,7 +6,7 @@ zp.model = (function () {
 			remote_db: null,
 			dbhost   : null
 		},
-		initModule, configModule, deleteItem, todoToggle,
+		initModule, configModule, deleteItem, deletePlans, updateItem,
 		setDday, getDday, sync, login, join, checkId, logout, findId, changePw,
 		setTodo, setPlan, getTodo, getPlan, getInfo, upload, download, checkAnswer;
 	// 로그인 로그아웃 관련 함수
@@ -128,10 +128,19 @@ zp.model = (function () {
 			end = 1000000000000000000;
 		}
 		stateMap.local_db.query(function (doc, emit) {
-			if (doc.type === 'todo' && doc._id > start && doc._id < end) {
-				emit(doc);
+			if (start === 'dateless') {
+				if (doc.type === 'todo' && doc.date === 'dateless') {
+					emit(doc);
+				}
+			} else {
+				if (doc.type === 'todo' && doc._id > start && doc._id < end) {
+					emit(doc);
+				}
 			}
 		}).then(function (todos) {
+			if (todos.total_rows === 0) {
+				deferred.reject('not_found');
+			}
 			rows = todos.rows;
 			len = rows.length;
 			for (i; i < len; i++) {
@@ -143,12 +152,17 @@ zp.model = (function () {
 		});
 		return deferred.promise();
 	};
-	todoToggle = function (id, bool) {
+	updateItem = function (id, data) {
 		stateMap.local_db.get(id).then(function (doc) {
-			doc.done = bool;
+			var prop;
+			for (prop in data) {
+				if (data.hasOwnProperty(prop)) {
+					doc[prop] = data[prop];
+				}
+			}
 			return stateMap.local_db.put(doc);
 		}).then(function (doc) {
-			console.log(doc);
+			console.log('업데이트 완료!', doc);
 		}).catch(function (err) {
 			console.log(err);
 		});
@@ -176,6 +190,9 @@ zp.model = (function () {
 				emit(doc);
 			}
 		}).then(function (plans) {
+			if (plans.total_rows === 0) {
+				deferred.reject('not_found');
+			}
 			rows = plans.rows;
 			len = rows.length;
 			for (i; i < len; i++) {
@@ -213,10 +230,12 @@ zp.model = (function () {
 				emit(doc);
 			}
 		}).then(function (ddays) {
+			if (ddays.total_rows === 0) {
+				deferred.reject('not_found');
+			}
 			rows = ddays.rows;
 			len = rows.length;
 			for (i; i < len; i++) {
-				console.log(rows[i]);
 				dday.push(rows[i].key);
 			}
 			deferred.resolve(dday);
@@ -229,8 +248,32 @@ zp.model = (function () {
 	deleteItem = function (id) {
 		var deferred = $.Deferred();
 		stateMap.local_db.get(id).then(function (doc) {
+			console.log(doc);
 			return stateMap.local_db.remove(doc);
 		}).then(function (result) {
+			deferred.resolve(result);
+		}).catch(function (err) {
+			deferred.reject(err);
+		});
+		return deferred.promise();
+	};
+	deletePlans = function (id) {
+		var deferred = $.Deferred();
+		stateMap.local_db.query(function (doc, emit) {
+			if (doc.type === 'plan' && doc.plan_idx === id) {
+				emit(doc);
+			}
+		}).then(function (doc) {
+			var docs = doc.rows.map(function (row) {
+				return {
+					_id: row.id,
+					_rev: row.rev,
+					_deleted: true
+				};
+			});
+			return stateMap.local_db.bulkDocs(docs);
+		}).then(function (result) {
+			console.log(result);
 			deferred.resolve(result);
 		}).catch(function (err) {
 			deferred.reject(err);
@@ -304,13 +347,13 @@ zp.model = (function () {
 		return true;
 	};
 	return {
-		todoToggle  : todoToggle,
 		configModule: configModule,
 		initModule  : initModule,
 		login       : login,
 		logout      : logout,
 		setTodo     : setTodo,
 		getTodo     : getTodo,
+		updateItem: updateItem,
 		setPlan     : setPlan,
 		getPlan     : getPlan,
 		getInfo     : getInfo,
@@ -324,6 +367,7 @@ zp.model = (function () {
 		findId      : findId,
 		changePw    : changePw,
 		checkAnswer : checkAnswer,
-		deleteItem  : deleteItem
+		deleteItem: deleteItem,
+		deletePlans: deletePlans
 	};
 }());

@@ -1,0 +1,55 @@
+@import 'compass'
+@import "zp.shell"
+@import "zp.modal"
+@import "zp.calendar"
+@import "zp.day"
+@import "zp.week"
+@import "zp.month"
+@import "zp.year"
+@import "zp.todo"
+@import "zp.dday"
+@import "zp.plan"
+/*
+ * zp.css
+ * 루트 네임스페이스 스타일
+ */
+/** 재설정 시작 */
+*
+	margin: 0
+	padding: 0
+	+box-sizing(border-box)
+//outline: 1px dotted salmon
+html
+	font-size: 15px
+	line-height: 15px
+	height: 100%
+
+body
+	font-family: 'Nanum Gothic', sans-serif
+	position: relative
+	height: 100%
+
+ol, ul, dl
+	list-style-position: inside
+
+table
+	border-collapse: collapse
+	border-spacing: 0
+/** 재설정 끝 */
+/** 공통 css 시작*/
+.full
+	width: 100%
+
+.float-right
+	float: right
+
+.float-left
+	float: left
+
+label
+	display: inline-block
+	padding: 3px
+/** 공통 css 끝 */
+#zplanner
+	position: relative
+	height: 100%

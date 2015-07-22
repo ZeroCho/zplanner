@@ -1,0 +1,29 @@
+@import 'compass'
+@import "compass/css3/user-interface"
+$year-hover: beige
+.year-main
+	overflow: auto
+	border-left: 1px solid gray
+	border-right: 1px solid gray
+	+user-select(none)
+
+.year-calendar
+	font-size: 10px
+	float: left
+	width: 50%
+	height: 110px
+	border-bottom: 1px solid silver
+	&:hover
+		background: scale-lightness($year-hover, -10%)
+	&:nth-child(2n+1)
+		border-right: 1px solid silver
+	table
+		width: 100%
+		cursor: pointer
+		th
+			border-bottom: 0
+			&:first-child
+				display: none
+		td
+			margin: 0
+			padding: 0

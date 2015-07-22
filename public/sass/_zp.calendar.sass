@@ -1,0 +1,21 @@
+@import 'compass'
+.calendar-table
+	text-align: center
+	border-collapse: collapse
+	thead th
+		border-bottom: 1px solid black
+	td:nth-child(n+1)
+		vertical-align: top
+	td:first-child, th:first-child, .calendar-caption
+		color: green
+	td:nth-child(2), th:nth-child(2)
+		color: red
+	td:last-child, th:last-child
+		color: blue
+	.hidden
+		visibility: hidden
+		display: none
+	.td-today
+		color: darkred
+		text-decoration: underline
+		font-weight: bolder

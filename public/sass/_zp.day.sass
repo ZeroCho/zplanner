@@ -7,6 +7,7 @@ $td-height: 40px
 	white-space: nowrap
 	overflow: hidden
 	line-height: $td-height - 1
+
 .dday-table
 	width: 100%
 	+user-select(none)
@@ -21,10 +22,10 @@ $td-height: 40px
 	width: 100%
 	+user-select(none)
 	td
-		border-top: 1px solid gray
+		border-top: 1px solid silver
 		height: $td-height
 		text-align: center
-		color: silver
+		color: lightgray
 
 .todo
 	position: absolute
@@ -44,6 +45,11 @@ $td-height: 40px
 
 .dday
 	background: red
+	height: $td-height - 1
+	text-align: center
+
+.dateless
+	background: yellow
 	height: $td-height - 1
 	text-align: center
 
