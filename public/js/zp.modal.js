@@ -2,23 +2,23 @@ zp.modal = (function () {
 	'use strict';
 	var
 		configMap = {
-			settable_map  : {
+			settable_map: {
 				set_cur_anchor: true
 			},
 			set_cur_anchor: null,
-			today         : {
-				year : new Date().getFullYear(),
+			today: {
+				year: new Date().getFullYear(),
 				month: new Date().getMonth() + 1,
-				date : new Date().getDate()
+				date: new Date().getDate()
 			}
 		},
 		stateMap = {
 			$container: null,
-			year      : new Date().getFullYear(),
-			month     : new Date().getMonth() + 1,
-			date      : new Date().getDate(),
-			hour      : new Date().getHours(),
-			minute    : new Date().getMinutes()
+			year: new Date().getFullYear(),
+			month: new Date().getMonth() + 1,
+			date: new Date().getDate(),
+			hour: new Date().getHours(),
+			minute: new Date().getMinutes()
 		},
 		jqueryMap = {},
 		setJqueryMap, configModule, initModule, onClickClose, onClickBack,
@@ -110,17 +110,9 @@ zp.modal = (function () {
 	};
 	onOffline = function () {
 		$.gevent.publish('zp-offline', []);
-		$('body').css({
-			height: '100%',
-			overflow: 'auto'
-		});
 		jqueryMap.$container.hide();
 	};
 	onClickClose = function () {
-		$('body').css({
-			height: '100%',
-			overflow: 'auto'
-		});
 		jqueryMap.$container.empty().hide();
 	};
 	onClickBack = function () {
@@ -151,7 +143,7 @@ zp.modal = (function () {
 	onCheckAnswer = function (e) {
 		var
 			data = {
-				id : jqueryMap.$findIdForm.find('#findpw-id').val(),
+				id: jqueryMap.$findIdForm.find('#findpw-id').val(),
 				ans: jqueryMap.$answerChkForm.find('#findpw-ans').val()
 			},
 			result;
@@ -227,7 +219,7 @@ zp.modal = (function () {
 	checkRegEmail = function (e) {
 		var regEmail = /^[\-A-Za-z0-9_]+[\-A-Za-z0-9_.]*@[\-A-Za-z0-9_]+[\-A-Za-z0-9_.]*\.[A-Za-z]{2,5}$/,
 			email = e || $(this).val();
-		if (e.hasOwnProperty('data') && email === '') { // 블러로 접근하고 빈칸일 때
+		if (email === '') { // 블러로 접근하고 빈칸일 때
 			return false;
 		}
 		if (typeof email !== 'string' || email === '') { //
@@ -251,12 +243,12 @@ zp.modal = (function () {
 			$ans = $('#join-ans'),
 			$agree = $('#join-agree'),
 			data = {
-				id    : $id.val(),
-				email : $email.val(),
-				pw    : $pw.val(),
-				nick  : $nick.val(),
-				qst   : $qst.val(),
-				ans   : $ans.val(),
+				id: $id.val(),
+				email: $email.val(),
+				pw: $pw.val(),
+				nick: $nick.val(),
+				qst: $qst.val(),
+				ans: $ans.val(),
 				avatar: 'z'
 			},
 			result, spinner;
@@ -409,13 +401,13 @@ zp.modal = (function () {
 			alert('빈칸이 있습니다.');
 			return false;
 		}
-
 		data = {
-			_id : new Date(date + ' ' + time).getTime() + makeRandom(),
+			_id: new Date(date + ' ' + time).getTime() + makeRandom(),
 			date: date,
 			time: time,
 			text: text,
 			done: false,
+			alarm: false,
 			type: 'todo'
 		};
 		if (dateless === true) {
@@ -460,14 +452,14 @@ zp.modal = (function () {
 			endtime = hour + ':' + minute;
 		}
 		data = {
-			_id      : new Date(startdate + ' ' + starttime).getTime() + makeRandom(),
+			_id: new Date(startdate + ' ' + starttime).getTime() + makeRandom(),
 			startdate: startdate,
 			starttime: starttime,
-			enddate  : enddate,
-			endtime  : endtime,
-			text     : text,
-			plan_idx : makeRandom(),
-			type     : 'plan'
+			enddate: enddate,
+			endtime: endtime,
+			text: text,
+			plan_idx: makeRandom(),
+			type: 'plan'
 		};
 		tempData = $.extend({}, data);
 		dataList.push(tempData);
@@ -583,11 +575,11 @@ zp.modal = (function () {
 			return false;
 		}
 		data = {
-			_id   : new Date(target).getTime() + makeRandom(),
+			_id: new Date(target).getTime() + makeRandom(),
 			target: target,
-			text  : text,
+			text: text,
 			repeat: repeat,
-			type  : 'dday'
+			type: 'dday'
 		};
 		result = zp.model.setDday(data);
 		result.done(function (data) {
@@ -604,9 +596,9 @@ zp.modal = (function () {
 	};
 	configModule = function (input_map) {
 		zp.util.setConfigMap({
-			input_map   : input_map,
+			input_map: input_map,
 			settable_map: configMap.settable_map,
-			config_map  : configMap
+			config_map: configMap
 		});
 	};
 	initModule = function ($container, state, data) {
@@ -618,10 +610,6 @@ zp.modal = (function () {
 			state = 'login';
 		}
 		$container.html($('#zp-' + state).html());
-		$('body').css({
-			height: $container.height(),
-			overflow: 'hidden'
-		});
 		stateMap.$container = $container;
 		setJqueryMap($container);
 		if (data) {
@@ -672,6 +660,6 @@ zp.modal = (function () {
 	};
 	return {
 		configModule: configModule,
-		initModule  : initModule
+		initModule: initModule
 	};
 }());

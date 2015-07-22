@@ -21,7 +21,6 @@
 //outline: 1px dotted salmon
 html
 	font-size: 15px
-	line-height: 15px
 	height: 100%
 
 body
@@ -48,7 +47,51 @@ table
 
 label
 	display: inline-block
-	padding: 3px
+	margin-bottom: 5px
+	font-weight: 700
+	max-width: 100%
+
+button
+	margin-top: 5px
+	margin-bottom: 5px
+	color: crimson
+	background-color: #fff
+	display: inline-block
+	padding: 6px 12px
+	font-size: 14px
+	font-family: 'Nanum Gothic', sans-serif
+	font-weight: 400
+	line-height: 1.42857143
+	text-align: center
+	white-space: nowrap
+	vertical-align: middle
+	touch-action: manipulation
+	cursor: pointer
+	+user-select(none)
+	border: 1px solid #cccccc
+	border-radius: 4px
+	&:hover
+		background-color: #e6e6e6
+		border-color: #adadad
+	&:active
+		outline: 0
+		box-shadow: inset 0 3px 5px rgba(0,0,0,.125)
+input[type=email], input[type=text], input[type=password], input[type=date], input[type=time], input[type=number]
+	display: inline-block
+	vertical-align: middle
+	height: 34px
+	padding: 6px 12px
+	font-size: 14px
+	line-height: 1.42857143
+	color: #555
+	background-color: #fff
+	border: 1px solid #cccccc
+	border-radius: 4px
+	box-shadow: inset 0 1px 1px rgba(0,0,0,.075)
+	transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s
+	&:focus
+		border-color: #66afe9
+		box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102,175,233,.6)
 /** 공통 css 끝 */
 #zplanner
 	position: relative

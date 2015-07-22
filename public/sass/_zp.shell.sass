@@ -57,21 +57,13 @@ $list: day plan todo
 			line-height: 30px
 	.tool
 		position: absolute
-		right: 0
+		right: 5px
 		top: 0
 		.tool-button
-			background: white
-			color: crimson
-			float: left
-			border: 1px solid silver
-			margin: $btn-margin 4px
+			padding: 0
 			width: $btn-height
 			height: $btn-height
 			line-height: $btn-height
-			&:hover
-				background: lightgray
-			&:active
-				background: gray
 
 main
 	position: relative
@@ -111,15 +103,16 @@ main
 	text-align: center
 	line-height: 20px
 	margin-bottom: 5px
+	border-radius: 7px
 	.fa-caret-down, .fa-caret-right
 		position: absolute
-		left: 5px
+		left: 10px
 		font-size: 20px
-		margin-right: 5px
 
 .item-del, .item-alarm
 	float: right
 	font-size: 25px
+	margin-left: 10px
 
 .item-alarm
 	color: silver

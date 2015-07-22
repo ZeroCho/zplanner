@@ -62,24 +62,14 @@
 }
 .main-header .tool {
   position: absolute;
-  right: 0;
+  right: 5px;
   top: 0;
 }
 .main-header .tool .tool-button {
-  background: white;
-  color: crimson;
-  float: left;
-  border: 1px solid silver;
-  margin: 5px 4px;
+  padding: 0;
   width: 30px;
   height: 30px;
   line-height: 30px;
-}
-.main-header .tool .tool-button:hover {
-  background: lightgray;
-}
-.main-header .tool .tool-button:active {
-  background: gray;
 }
 
 main {
@@ -134,17 +124,18 @@ main {
   text-align: center;
   line-height: 20px;
   margin-bottom: 5px;
+  border-radius: 7px;
 }
 .subheader .fa-caret-down, .subheader .fa-caret-right {
   position: absolute;
-  left: 5px;
+  left: 10px;
   font-size: 20px;
-  margin-right: 5px;
 }
 
 .item-del, .item-alarm {
   float: right;
   font-size: 25px;
+  margin-left: 10px;
 }
 
 .item-alarm {
@@ -152,7 +143,7 @@ main {
 }
 
 .modal {
-  position: absolute;
+  position: fixed;
   top: 0;
   height: 100%;
   width: 100%;
@@ -192,7 +183,11 @@ main {
 #modal-login {
   height: 100%;
 }
-#modal-login #login-wrapper {
+#modal-login input {
+  margin-bottom: 10px;
+}
+
+#login-wrapper {
   width: 80%;
   margin: 0 auto;
   position: relative;
@@ -201,83 +196,27 @@ main {
   -ms-transform: translateY(-50%);
       transform: translateY(-50%);
 }
-#modal-login #login-wrapper #modal-logo {
-  font-family: roboto, sans-serif;
+
+.modal-logo {
+  font-family: Helvetica, sans-serif;
   font-size: 4em;
   text-align: center;
   margin-bottom: 15px;
-}
-#modal-login #login-wrapper input {
-  height: 30px;
-  line-height: 30px;
-}
-#modal-login #login-wrapper input:focus {
-  border-color: deepskyblue;
-}
-#modal-login #login-wrapper #login-sbmt {
-  height: 30px;
-  background: transparent;
   color: crimson;
-  border: 1px solid gray;
-  font-family: "Nanum Gothic", sans-serif;
-  text-align: center;
-  cursor: pointer;
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-#modal-login #login-wrapper #login-sbmt:focus {
-  background-color: silver;
-}
-#modal-login #login-wrapper #join-btn, #modal-login #login-wrapper #findpw-btn, #modal-login #login-wrapper #offline-btn {
-  height: 30px;
-  background: transparent;
-  color: crimson;
-  border: 1px solid gray;
-  font-family: "Nanum Gothic", sans-serif;
-  text-align: center;
-  cursor: pointer;
-}
-#modal-login #login-wrapper #join-btn:focus, #modal-login #login-wrapper #findpw-btn:focus, #modal-login #login-wrapper #offline-btn:focus {
-  background-color: silver;
 }
 
-#modal-join {
-  height: 100%;
-}
-#modal-join form {
+#join-form {
+  top: 60px;
+  position: relative;
   width: 80%;
   margin: 0 auto;
-  position: relative;
-  top: 50%;
-  -webkit-transform: translateY(-50%);
-  -ms-transform: translateY(-50%);
-      transform: translateY(-50%);
 }
-#modal-join form #join-agree {
-  height: auto;
+#join-form input {
+  margin-bottom: 10px;
 }
-#modal-join form #check-id-btn {
-  height: 30px;
-  background: transparent;
-  font-family: "Nanum Gothic", sans-serif;
-  text-align: center;
-  cursor: pointer;
-  border: 1px solid gray;
-}
-#modal-join form input {
-  height: 30px;
-}
-#modal-join form #join-sbmt {
-  height: 30px;
-  background: transparent;
-  color: crimson;
-  border: 1px solid gray;
-  font-family: "Nanum Gothic", sans-serif;
-  text-align: center;
-  cursor: pointer;
-}
-#modal-join form #join-sbmt:focus {
-  background-color: silver;
+
+#join-sbmt {
+  margin-bottom: 30px;
 }
 
 #modal-findpw {
@@ -286,19 +225,8 @@ main {
 #modal-findpw .findpw-header {
   text-align: center;
 }
-#modal-findpw #findpw-id-sbmt, #modal-findpw #findpw-ans-sbmt, #modal-findpw #findpw-newpw-sbmt {
-  height: 30px;
-  background: transparent;
-  color: crimson;
-  border: 1px solid gray;
-  font-family: "Nanum Gothic", sans-serif;
-  text-align: center;
-  cursor: pointer;
-}
-#modal-findpw #findpw-id-sbmt:focus, #modal-findpw #findpw-ans-sbmt:focus, #modal-findpw #findpw-newpw-sbmt:focus {
-  background-color: silver;
-}
-#modal-findpw #findpw-forms {
+
+#findpw-forms {
   width: 80%;
   margin: 0 auto;
   position: relative;
@@ -306,13 +234,6 @@ main {
   -webkit-transform: translateY(-50%);
   -ms-transform: translateY(-50%);
       transform: translateY(-50%);
-}
-#modal-findpw input {
-  height: 30px;
-  line-height: 30px;
-}
-#modal-findpw input:focus {
-  border-color: deepskyblue;
 }
 
 #modal-menu {
@@ -323,19 +244,6 @@ main {
   width: 50%;
   border: 1px solid silver;
   color: crimson;
-}
-
-#modal-search {
-  height: 100%;
-}
-#modal-search form {
-  width: 80%;
-  margin: 0 auto;
-  position: relative;
-  top: 50%;
-  -webkit-transform: translateY(-50%);
-  -ms-transform: translateY(-50%);
-      transform: translateY(-50%);
 }
 
 #modal-todo {
@@ -350,24 +258,8 @@ main {
   -ms-transform: translateY(-50%);
       transform: translateY(-50%);
 }
-#modal-todo input {
-  height: 30px;
-  line-height: 30px;
-}
-#modal-todo input:focus {
-  border-color: deepskyblue;
-}
-#modal-todo #todo-sbmt {
-  height: 30px;
-  background: transparent;
-  color: crimson;
-  border: 1px solid gray;
-  font-family: "Nanum Gothic", sans-serif;
-  text-align: center;
-  cursor: pointer;
-}
-#modal-todo #todo-sbmt:focus {
-  background-color: silver;
+#modal-todo form input {
+  margin-bottom: 10px;
 }
 
 #modal-plan {
@@ -382,24 +274,8 @@ main {
   -ms-transform: translateY(-50%);
       transform: translateY(-50%);
 }
-#modal-plan input {
-  height: 30px;
-  line-height: 30px;
-}
-#modal-plan input:focus {
-  border-color: deepskyblue;
-}
-#modal-plan #plan-sbmt {
-  height: 30px;
-  background: transparent;
-  color: crimson;
-  border: 1px solid gray;
-  font-family: "Nanum Gothic", sans-serif;
-  text-align: center;
-  cursor: pointer;
-}
-#modal-plan #plan-sbmt:focus {
-  background-color: silver;
+#modal-plan form input {
+  margin-bottom: 10px;
 }
 
 #modal-dday {
@@ -414,24 +290,8 @@ main {
   -ms-transform: translateY(-50%);
       transform: translateY(-50%);
 }
-#modal-dday input {
-  height: 30px;
-  line-height: 30px;
-}
-#modal-dday input:focus {
-  border-color: deepskyblue;
-}
-#modal-dday #dday-sbmt {
-  height: 30px;
-  background: transparent;
-  color: crimson;
-  border: 1px solid gray;
-  font-family: "Nanum Gothic", sans-serif;
-  text-align: center;
-  cursor: pointer;
-}
-#modal-dday #dday-sbmt:focus {
-  background-color: silver;
+#modal-dday form input {
+  margin-bottom: 10px;
 }
 
 #modal-type {
@@ -465,17 +325,26 @@ main {
   -ms-transform: translateY(-50%);
       transform: translateY(-50%);
 }
-#modal-search #search-date {
+
+#search-date {
   width: 100%;
   height: 30px;
   margin-bottom: 10px;
 }
-#modal-search #search-btn, #modal-search #search-today {
-  width: 50%;
-  border: 1px solid silver;
-  height: 40px;
-  color: crimson;
+
+#search-btn, #search-today {
+  width: 49%;
+}
+
+.intro {
+  position: fixed;
+  top: 0;
+  height: 100%;
+  width: 100%;
   background: white;
+  color: crimson;
+  display: none;
+  z-index: 1000;
 }
 
 .calendar-table {
@@ -961,7 +830,6 @@ main {
 
 html {
   font-size: 15px;
-  line-height: 15px;
   height: 100%;
 }
 
@@ -996,7 +864,62 @@ table {
 
 label {
   display: inline-block;
-  padding: 3px;
+  margin-bottom: 5px;
+  font-weight: 700;
+  max-width: 100%;
+}
+
+button {
+  margin-top: 5px;
+  margin-bottom: 5px;
+  color: crimson;
+  background-color: #fff;
+  display: inline-block;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-family: "Nanum Gothic", sans-serif;
+  font-weight: 400;
+  line-height: 1.42857;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  -ms-touch-action: manipulation;
+      touch-action: manipulation;
+  cursor: pointer;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+}
+button:hover {
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+button:active {
+  outline: 0;
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+}
+
+input[type=email], input[type=text], input[type=password], input[type=date], input[type=time], input[type=number] {
+  display: inline-block;
+  vertical-align: middle;
+  height: 34px;
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.42857;
+  color: #555;
+  background-color: #fff;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  -webkit-transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+          transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
+}
+input[type=email]:focus, input[type=text]:focus, input[type=password]:focus, input[type=date]:focus, input[type=time]:focus, input[type=number]:focus {
+  border-color: #66afe9;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(102, 175, 233, 0.6);
 }
 
 /** Ω│╡φå╡ css δü¥ */

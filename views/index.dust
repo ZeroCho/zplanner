@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html manifest="zplanner.appcache" lang="ko-KR">
+<html lang="ko-KR">
 <head>
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta charset="utf-8">
@@ -21,9 +21,7 @@
 			<div class="name">로그인</div>
 			<div class="menu">
 				<ul>
-					<li>
-						<div id="menu-logout" class="menu-list">로그아웃</div>
-					</li>
+					<li><div id="menu-logout" class="menu-list">로그아웃</div></li>
 					<li>
 						<div id="menu-profile" class="menu-list">개인정보</div>
 					</li>
@@ -43,8 +41,8 @@
 			</div>
 		</div>
 		<div class="tool">
-			<div class="tool-button tool-toggle"><i class="fa fa-list"></i></div>
-			<div class="tool-button tool-search"><i class="fa fa-search"></i></div>
+			<button class="tool-button tool-toggle"><i class="fa fa-list"></i></button>
+			<button class="tool-button tool-search"><i class="fa fa-search"></i></button>
 		</div>
 	</header>
 	<main>
@@ -57,7 +55,9 @@
 		</div>
 	</main>
 	<div class="modal"></div>
-	<div class="intro"></div>
+	<div class="intro">
+		<div class="modal-logo">{title}</div>
+	</div>
 </div>
 <!-- bower javascript-->
 <script src="vendor/jquery/dist/jquery.min.js"></script>
@@ -75,9 +75,6 @@
 <script>phonegapHandler.initialize()</script>
 <!-- my javascript -->
 <script src="dist/zplanner.js"></script>
-<script>$(function () {
-	zp.initModule($('#zplanner'));
-});</script>
 <!-- dust.js templates -->
 <script type="text/dust" id="zp-day">
 	<table class="dday-table"></table>
@@ -142,20 +139,17 @@
 </script>
 <script type="text/dust" id="zp-plan">
 	<section id="plan-main"></section>
-
-
 </script>
 <script type="text/dust" id="zp-todo">
 	<section id="todo-main">
 	<div id="todo-dateless"></div>
 	<div id="todo-normal"></div>
 </section>
-
 </script>
 <script type="text/dust" id="zp-login">
 	<div id="modal-login">
 		<div id="login-wrapper">
-			<div id="modal-logo">{title}</div>
+			<div class="modal-logo">{title}</div>
 			<form id="login-form">
 				<label for="login-id">아이디</label>
 				<input type="text" id="login-id" name="login-id" class="full" required autofocus/>
@@ -163,12 +157,11 @@
 				<input type="password" id="login-pw" name="login-pw" class="full" required/>
 				<button type="submit" id="login-sbmt" class="full">로그인</button>
 			</form>
-			<div id="join-btn" class="full">회원가입</div>
-			<div id="findpw-btn" class="full">아이디/비밀번호 찾기</div>
-			<div id="offline-btn" class="full">오프라인으로 접속하기</div>
+			<button id="join-btn" class="full">회원가입</button>
+			<button id="findpw-btn" class="full">아이디/비밀번호 찾기</button>
+			<button id="offline-btn" class="full">오프라인으로 접속하기</button>
 		</div>
 	</div>
-
 </script>
 <script type="text/dust" id="zp-join">
 	<div id="modal-join">
@@ -179,41 +172,20 @@
 		</header>
 		<form id="join-form">
 			<label for="join-id" class="full">아이디</label>
-
-			<div>
-				<input type="text" id="join-id" required autofocus/>
-				<button type="button" id="check-id-btn">중복확인</button>
-			</div>
+			<input type="text" id="join-id" class="full" required autofocus/>
+			<button type="button" class="full" id="check-id-btn">중복확인</button>
 			<label for="join-email" class="full">이메일</label>
-
-			<div>
-				<input type="email" id="join-email" required/>
-			</div>
+			<input type="email" id="join-email" class="full" required/>
 			<label for="join-name" class="full">닉네임</label>
-
-			<div>
-				<input type="text" id="join-name" required/>
-			</div>
+			<input type="text" id="join-name" class="full" required/>
 			<label for="join-pw" class="full">비밀번호</label>
-
-			<div>
-				<input type="password" id="join-pw" required/>
-			</div>
+			<input type="password" id="join-pw" class="full" required/>
 			<label for="join-pwc" class="full">비밀번호 확인</label>
-
-			<div>
-				<input type="password" id="join-pwc" required/>
-			</div>
+			<input type="password" id="join-pwc" class="full" required/>
 			<label for="join-qst" class="full">비밀번호 찾기 질문</label>
-
-			<div>
-				<input type="text" id="join-qst" required/>
-			</div>
+			<input type="text" id="join-qst" class="full" required/>
 			<label for="join-ans" class="full">비밀번호 찾기 대답</label>
-
-			<div>
-				<input type="text" id="join-ans" required/>
-			</div>
+			<input type="text" id="join-ans" class="full" required/>
 			<div>
 				<input type="checkbox" value="agree" id="join-agree" required disabled>
 				<label for="join-agree">회원가입 약관에 동의합니다.</label>
@@ -221,8 +193,6 @@
 			<button type="submit" id="join-sbmt" class="full">가입</button>
 		</form>
 	</div>
-
-
 </script>
 <script type="text/dust" id="zp-findpw">
 <div id="modal-findpw">
@@ -569,7 +539,7 @@
 			<div>
 				<label for="plan-input-number">횟수:</label> <input type="number"
 																  id="plan-input-number"
-																  size="2"/>회
+																  size="2"/>
 				<br/>
 				<label for="plan-input-lastdate">종료일</label> <input type="date"
 																	id="plan-input-lastdate"/>
@@ -577,7 +547,7 @@
 		</div>
 		<br/>
 		<label for="plan-input-text">내용</label>
-		<input id="plan-input-text" placeholder="내용" class="full" required>
+		<input type="text" id="plan-input-text" placeholder="내용" class="full" required>
 		<button type="submit" id="plan-sbmt" class="full">등록</button>
 	</form>
 </div>

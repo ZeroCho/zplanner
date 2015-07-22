@@ -26,8 +26,7 @@ var gulp = require('gulp'),
 		sass: {
 			src: 'public/sass/*.sass',
 			cssSrc: 'public/css',
-			compassSrc: 'public/sass',
-			dest: 'public/css/'
+			compassSrc: 'public/sass'
 		},
 		js: {
 			src: 'public/js/*.js',
@@ -94,7 +93,7 @@ gulp.task('styles', function () {
 	gulp.src(dir.sass.src)
 		.pipe(plumber(plumberErrorHandler))
 		.pipe(compass({
-			css: dir.sass.cssSrc,
+			css: dir.js.dest,
 			sass: dir.sass.compassSrc
 		}))
 		.pipe(autoprefixer('last 2 version', 'safari 5', 'ie 8', 'ie9', 'opera 12.1', 'ios 6'))

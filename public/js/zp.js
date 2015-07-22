@@ -23,3 +23,6 @@ var zp = (function () {
 		initModule: initModule
 	};
 }());
+$(function () {
+	zp.initModule($('#zplanner'));
+});

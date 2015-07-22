@@ -8,25 +8,9 @@
 	transform: translateY(-50%)
 $input-height: 30px
 $input-margin: 10px
-=input-position()
-	height: $input-height
-	line-height: $input-height
-	&:focus
-		border-color: deepskyblue
-
-=button-style()
-	height: $input-height
-	background: transparent
-	color: crimson
-	border: 1px solid gray
-	font-family: 'Nanum Gothic', sans-serif
-	text-align: center
-	cursor: pointer
-	&:focus
-		background-color: silver
 
 .modal
-	position: absolute
+	position: fixed
 	top: 0
 	height: 100%
 	width: 100%
@@ -61,50 +45,37 @@ $input-margin: 10px
 
 #modal-login
 	height: 100%
-	#login-wrapper
-		+modal-position
-		#modal-logo
-			font-family: roboto, sans-serif
-			font-size: 4em
-			text-align: center
-			margin-bottom: 15px
-		input
-			+input-position
-		#login-sbmt
-			+button-style
-			margin-top: 10px
-			margin-bottom: 10px
-		#join-btn, #findpw-btn, #offline-btn
-			+button-style
+	input
+		margin-bottom: 10px
 
-#modal-join
-	height: 100%
-	form
-		+modal-position
-		#join-agree
-			height: auto
-		#check-id-btn
-			height: $input-height
-			background: transparent
-			font-family: "Nanum Gothic", sans-serif
-			text-align: center
-			cursor: pointer
-			border: 1px solid gray
-		input
-			height: $input-height
-		#join-sbmt
-			+button-style
+#login-wrapper
+	+modal-position
+
+.modal-logo
+	font-family: Helvetica, sans-serif
+	font-size: 4em
+	text-align: center
+	margin-bottom: 15px
+	color: crimson
+
+#join-form
+	top: 60px
+	position: relative
+	width: 80%
+	margin: 0 auto
+	input
+		margin-bottom: 10px
+
+#join-sbmt
+	margin-bottom: 30px
 
 #modal-findpw
 	height: 100%
 	.findpw-header
 		text-align: center
-	#findpw-id-sbmt, #findpw-ans-sbmt, #findpw-newpw-sbmt
-		+button-style
-	#findpw-forms
-		+modal-position
-	input
-		+input-position
+
+#findpw-forms
+	+modal-position
 
 #modal-menu
 	height: 100%
@@ -114,37 +85,26 @@ $input-margin: 10px
 		border: 1px solid silver
 		color: crimson
 
-#modal-search
-	height: 100%
-	form
-		+modal-position
-
 #modal-todo
 	height: 100%
 	form
 		+modal-position()
-	input
-		+input-position
-	#todo-sbmt
-		+button-style
+		input
+			margin-bottom: 10px
 
 #modal-plan
 	height: 100%
 	form
 		+modal-position()
-	input
-		+input-position()
-	#plan-sbmt
-		+button-style()
+		input
+			margin-bottom: 10px
 
 #modal-dday
 	height: 100%
 	form
 		+modal-position()
-	input
-		+input-position()
-	#dday-sbmt
-		+button-style
+		input
+			margin-bottom: 10px
 
 #modal-type
 	height: 100%
@@ -160,13 +120,21 @@ $input-margin: 10px
 	height: 100%
 	form
 		+modal-position
-	#search-date
-		width: 100%
-		height: 30px
-		margin-bottom: 10px
-	#search-btn, #search-today
-		width: 50%
-		border: 1px solid silver
-		height: 40px
-		color: crimson
-		background: white
+
+#search-date
+	width: 100%
+	height: 30px
+	margin-bottom: 10px
+
+#search-btn, #search-today
+	width: 49%
+
+.intro
+	position: fixed
+	top: 0
+	height: 100%
+	width: 100%
+	background: white
+	color: crimson
+	display: none
+	z-index: 1000

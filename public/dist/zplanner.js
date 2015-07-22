@@ -23,6 +23,9 @@ var zp = (function () {
 		initModule: initModule
 	};
 }());
+$(function () {
+	zp.initModule($('#zplanner'));
+});
 zp.model = (function () {
 	'use strict';
 	var
@@ -2696,23 +2699,23 @@ zp.modal = (function () {
 	'use strict';
 	var
 		configMap = {
-			settable_map  : {
+			settable_map: {
 				set_cur_anchor: true
 			},
 			set_cur_anchor: null,
-			today         : {
-				year : new Date().getFullYear(),
+			today: {
+				year: new Date().getFullYear(),
 				month: new Date().getMonth() + 1,
-				date : new Date().getDate()
+				date: new Date().getDate()
 			}
 		},
 		stateMap = {
 			$container: null,
-			year      : new Date().getFullYear(),
-			month     : new Date().getMonth() + 1,
-			date      : new Date().getDate(),
-			hour      : new Date().getHours(),
-			minute    : new Date().getMinutes()
+			year: new Date().getFullYear(),
+			month: new Date().getMonth() + 1,
+			date: new Date().getDate(),
+			hour: new Date().getHours(),
+			minute: new Date().getMinutes()
 		},
 		jqueryMap = {},
 		setJqueryMap, configModule, initModule, onClickClose, onClickBack,
@@ -2804,17 +2807,9 @@ zp.modal = (function () {
 	};
 	onOffline = function () {
 		$.gevent.publish('zp-offline', []);
-		$('body').css({
-			height: '100%',
-			overflow: 'auto'
-		});
 		jqueryMap.$container.hide();
 	};
 	onClickClose = function () {
-		$('body').css({
-			height: '100%',
-			overflow: 'auto'
-		});
 		jqueryMap.$container.empty().hide();
 	};
 	onClickBack = function () {
@@ -2845,7 +2840,7 @@ zp.modal = (function () {
 	onCheckAnswer = function (e) {
 		var
 			data = {
-				id : jqueryMap.$findIdForm.find('#findpw-id').val(),
+				id: jqueryMap.$findIdForm.find('#findpw-id').val(),
 				ans: jqueryMap.$answerChkForm.find('#findpw-ans').val()
 			},
 			result;
@@ -2921,7 +2916,7 @@ zp.modal = (function () {
 	checkRegEmail = function (e) {
 		var regEmail = /^[\-A-Za-z0-9_]+[\-A-Za-z0-9_.]*@[\-A-Za-z0-9_]+[\-A-Za-z0-9_.]*\.[A-Za-z]{2,5}$/,
 			email = e || $(this).val();
-		if (e.hasOwnProperty('data') && email === '') { // 블러로 접근하고 빈칸일 때
+		if (email === '') { // 블러로 접근하고 빈칸일 때
 			return false;
 		}
 		if (typeof email !== 'string' || email === '') { //
@@ -2945,12 +2940,12 @@ zp.modal = (function () {
 			$ans = $('#join-ans'),
 			$agree = $('#join-agree'),
 			data = {
-				id    : $id.val(),
-				email : $email.val(),
-				pw    : $pw.val(),
-				nick  : $nick.val(),
-				qst   : $qst.val(),
-				ans   : $ans.val(),
+				id: $id.val(),
+				email: $email.val(),
+				pw: $pw.val(),
+				nick: $nick.val(),
+				qst: $qst.val(),
+				ans: $ans.val(),
 				avatar: 'z'
 			},
 			result, spinner;
@@ -3103,13 +3098,13 @@ zp.modal = (function () {
 			alert('빈칸이 있습니다.');
 			return false;
 		}
-
 		data = {
-			_id : new Date(date + ' ' + time).getTime() + makeRandom(),
+			_id: new Date(date + ' ' + time).getTime() + makeRandom(),
 			date: date,
 			time: time,
 			text: text,
 			done: false,
+			alarm: false,
 			type: 'todo'
 		};
 		if (dateless === true) {
@@ -3154,14 +3149,14 @@ zp.modal = (function () {
 			endtime = hour + ':' + minute;
 		}
 		data = {
-			_id      : new Date(startdate + ' ' + starttime).getTime() + makeRandom(),
+			_id: new Date(startdate + ' ' + starttime).getTime() + makeRandom(),
 			startdate: startdate,
 			starttime: starttime,
-			enddate  : enddate,
-			endtime  : endtime,
-			text     : text,
-			plan_idx : makeRandom(),
-			type     : 'plan'
+			enddate: enddate,
+			endtime: endtime,
+			text: text,
+			plan_idx: makeRandom(),
+			type: 'plan'
 		};
 		tempData = $.extend({}, data);
 		dataList.push(tempData);
@@ -3277,11 +3272,11 @@ zp.modal = (function () {
 			return false;
 		}
 		data = {
-			_id   : new Date(target).getTime() + makeRandom(),
+			_id: new Date(target).getTime() + makeRandom(),
 			target: target,
-			text  : text,
+			text: text,
 			repeat: repeat,
-			type  : 'dday'
+			type: 'dday'
 		};
 		result = zp.model.setDday(data);
 		result.done(function (data) {
@@ -3298,9 +3293,9 @@ zp.modal = (function () {
 	};
 	configModule = function (input_map) {
 		zp.util.setConfigMap({
-			input_map   : input_map,
+			input_map: input_map,
 			settable_map: configMap.settable_map,
-			config_map  : configMap
+			config_map: configMap
 		});
 	};
 	initModule = function ($container, state, data) {
@@ -3312,10 +3307,6 @@ zp.modal = (function () {
 			state = 'login';
 		}
 		$container.html($('#zp-' + state).html());
-		$('body').css({
-			height: $container.height(),
-			overflow: 'hidden'
-		});
 		stateMap.$container = $container;
 		setJqueryMap($container);
 		if (data) {
@@ -3366,7 +3357,7 @@ zp.modal = (function () {
 	};
 	return {
 		configModule: configModule,
-		initModule  : initModule
+		initModule: initModule
 	};
 }());
 zp.month = (function () {
@@ -3817,10 +3808,12 @@ zp.todo = (function () {
 			set_cur_anchor: null
 		},
 		stateMap = {
-			$container: null
+			$container: null,
+			totalCount: 0,
+			failCount: 0
 		},
 		jqueryMap = {},
-		setJqueryMap, display, configModule, initModule, onCheck, onDelete, setAlarm,
+		setJqueryMap, display, configModule, initModule, onCheck, onDelete, toggleAlarm, countFail,
 		updateTime, updateText, holdTap, holdStop, applyTime, applyText, isMobile, onClickCaret;
 	setJqueryMap = function ($container) {
 		jqueryMap = {
@@ -3859,11 +3852,12 @@ zp.todo = (function () {
 				}
 				jqueryMap.$dateless.append($frag);
 			}
+			countFail(true);
 		});
 		datelessResult.fail(function (err) {
 			$(spinner.el).remove();
 			if (err === 'not_found') {
-				jqueryMap.$dateless.html('<div class="no-content">할일을 작성해주세요</div>');
+				countFail(false);
 			} else {
 				alert(err);
 			}
@@ -3884,6 +3878,9 @@ zp.todo = (function () {
 						$check = $('<div/>').addClass('todo-done').append('<input type="checkbox" size="3">');
 						$del = $('<div/>').addClass('item-del').html('<i class="fa fa-trash-o"></i>');
 						$alarm = $('<div/>').addClass('item-alarm').html('<i class="fa fa-bell-o"></i>');
+						if (todoMap.alarm === true) {
+							$alarm.addClass('set');
+						}
 						$option = $('<div/>').addClass('todo-option').append($del).append($alarm);
 						$text = $('<div/>').addClass('todo-text').text(todoMap.text);
 						$due = $('<div/>').addClass('todo-due').text(dateStr);
@@ -3899,12 +3896,13 @@ zp.todo = (function () {
 					}
 				}
 				jqueryMap.$normal.append($fragg);
+				countFail(true);
 			}
 		});
 		todoResult.fail(function (err) {
 			$(spinner.el).remove();
 			if (err === 'not_found') {
-				jqueryMap.$normal.html('<div class="no-content">할일을 작성해주세요</div>');
+				countFail(false);
 			} else {
 				alert(err);
 			}
@@ -3912,6 +3910,19 @@ zp.todo = (function () {
 		spinner = new Spinner().spin();
 		jqueryMap.$main.append(spinner.el);
 		return true;
+	};
+	countFail = function (bool) {
+		stateMap.totalCount++;
+		if (!bool) {
+			stateMap.failCount++;
+		}
+		if (stateMap.totalCount === 2) {
+			if (stateMap.failCount === 2) {
+				jqueryMap.$dateless.html('<div class="no-content">할일을 작성해주세요</div>');
+			}
+			stateMap.totalCount = 0;
+			stateMap.failCount = 0;
+		}
 	};
 	onClickCaret = function () {
 		var $this = $(this);
@@ -3968,25 +3979,31 @@ zp.todo = (function () {
 		}
 		return (os === 'Android' || os === 'iOS');
 	};
-	setAlarm = function () {
+	toggleAlarm = function () {
 		if (isMobile()) {
 			var $this = $(this);
+			var $item = $this.closest('.todo-item');
 			var id = $item.data('id');
 			if ($this.hasClass('set')) { // 이미 설정되어 있을 경우
 				cordova.plugins.notification.local.cancel(id, function () {
 					// Notification was cancelled
 				});
 				$this.removeClass('set');
+				zp.model.updateItem(id, {
+					alarm: false
+				});
 				$this.css('color', 'silver');
 			} else {
-				var $item = $this.closest('.todo-item');
 				var text = $item.find('.todo-text').text();
 				var date = $item.find('.todo-due').text();
 				cordova.plugins.notification.local.schedule({
 					id: id,
 					text: text,
 					at: new Date(date),
-					sound: 'sound.mp3'
+					sound: '../sound.mp3'
+				});
+				zp.model.updateItem(id, {
+					alarm: true
 				});
 				$this.addClass('set');
 				$this.css('color', 'black');
@@ -4078,7 +4095,7 @@ zp.todo = (function () {
 		jqueryMap.$main.on('click', 'input[type=checkbox]', onCheck);
 		jqueryMap.$main.on('click', '.subheader i.fa', onClickCaret);
 		jqueryMap.$main.on('click', '.item-del', onDelete);
-		jqueryMap.$main.on('click', '.item-alarm', setAlarm);
+		jqueryMap.$main.on('click', '.item-alarm', toggleAlarm);
 		jqueryMap.$main.on('touchstart', '.todo-text, .todo-due', holdTap);
 		jqueryMap.$main.on('touchmove', '.todo-text, .todo-due', holdStop);
 		jqueryMap.$main.on('touchend', '.todo-text, .todo-due', holdStop);
