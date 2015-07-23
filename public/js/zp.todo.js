@@ -200,7 +200,7 @@ zp.todo = (function () {
 					id: id,
 					text: text,
 					at: new Date(date),
-					sound: '../sound.mp3'
+					sound: 'file://res/audio/sound.mp3'
 				});
 				zp.model.updateItem(id, {
 					alarm: true
